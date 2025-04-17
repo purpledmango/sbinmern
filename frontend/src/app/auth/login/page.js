@@ -1,11 +1,11 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { FcGoogle } from 'react-icons/fc';
-import { FaFacebook } from 'react-icons/fa';
+
 import axiosInstance from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/app/components/Spinner';
+
 // import Spinner from '@/components/Spinner'; // Make sure this path matches your project structure
 
 const Login = () => {
@@ -13,7 +13,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({
     show: false,
-    message: '',
+    message: 'none',
     type: 'error' // 'error' or 'success'
   });
   const [loginCreds, setLoginCreds] = useState({
@@ -158,7 +158,7 @@ const Login = () => {
         {/* Signup Link */}
         <div className="text-center mt-4">
           <p className="text-sm text-neutral-600">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/auth/signup"
               className="text-green-600 hover:text-green-700 font-medium"

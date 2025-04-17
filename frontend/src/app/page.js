@@ -1,6 +1,7 @@
 "use client"
 import { useState } from 'react';
 import { ShieldCheck, Server, Clock, Wallet, ChevronRight, CheckCircle, Menu, X } from 'lucide-react';
+import Image from 'next/image';
 
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,10 +88,12 @@ export default function HomePage() {
             <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
               <div className="relative mx-auto w-full lg:max-w-md">
                 <div className="relative block w-full bg-white rounded-lg shadow-lg overflow-hidden">
-                  <img 
+                  <Image 
                     className="w-full" 
                     src="/api/placeholder/600/400" 
                     alt="Website dashboard mockup" 
+                    width={200}
+                    height={200}
                   />
                   <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600 to-purple-600 mix-blend-multiply opacity-20"></div>
                   <div className="absolute inset-0 flex items-center justify-center">
