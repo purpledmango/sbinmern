@@ -216,4 +216,4 @@ export default function CountdownTimer() {
       <div className="absolute bottom-0 right-0 w-48 h-48 bg-indigo-100 rounded-full opacity-20 translate-x-20 translate-y-20"></div>
     </div>
   );
-}
+} 

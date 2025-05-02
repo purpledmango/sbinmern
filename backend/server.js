@@ -7,9 +7,10 @@ import connectWithDb from "./src/utils/db.js";
 import authMiddleware from "./src/utils/authMiddleware.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import userRoutes from "./src/routes/userRoutes.js";
-import infraRoutes from "./src/routes/infraRoutes.js"
+// import infraRoutes from "./src/routes/infraRoutes.js"
 import nodeRoutes from "./src/routes/nodeRoutes.js"
 import deploymenRoutes from "./src/routes/deploymentRoutes.js"
+// import { node } from "./src/controllers/nodeControllers.js";
 
 configDotenv();
 connectWithDb(process.env.DB_URI);
@@ -21,8 +22,8 @@ app.use(express.json());
 app.use(cors());
 app.use("/auth", authRoutes);
 app.use("/user", authMiddleware, userRoutes);
-app.use("/infra", infraRoutes);
-app.use("/node", nodeRoutes);
+// app.use("/infra", getNodes);
+app.use("/infra", nodeRoutes);
 app.use("/deploy", authMiddleware,deploymenRoutes);
 
 const __filename = fileURLToPath(import.meta.url);

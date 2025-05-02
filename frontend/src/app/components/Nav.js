@@ -1,11 +1,69 @@
 "use client"
 
 import { Menu } from 'lucide-react';
-import React from 'react'
+import React, { use, useEffect } from 'react'
 import { useState } from 'react';
+import axiosInstance from '@/utils/axiosInstance';
+// import { l } from 'framer-motion/dist/types.d-DDSxwf0n';
 
 const Nav = () => {
+  
+  const [user, setUser] = useState(null);
 
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const userData = await checkIfUserLoggedIn();
+      if (userData) {
+        
+        setUser(userData.data.name);  
+      }
+    };
+    verifyAuth();
+  }, []);
+  
+  const checkIfUserLoggedIn = async () => {
+    const token = localStorage.getItem("token");
+    const uid = localStorage.getItem("uid");
+  
+    // Early return if no token or uid exists
+    if (!token || !uid) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("uid");
+      return null;
+    }
+  
+    try {
+      const response = await axiosInstance.get("/user/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      return response.data;  // Return the data for the useEffect to handle
+  
+    } catch (error) {
+      console.error("Nav error", error);
+      
+      // Handle different error cases
+      if (error.response) {
+        if (error.response.status === 401 || error.response.status === 403) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("uid");
+        }
+      } else if (error.request) {
+        console.error("No response received", error.request);
+        localStorage.removeItem("token");
+        localStorage.removeItem("uid");
+      } else {
+        console.error("Request setup error", error.message);
+        localStorage.removeItem("token");
+        localStorage.removeItem("uid");
+      }
+      
+      return null;
+    }
+  };
+  
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -34,11 +92,15 @@ const Nav = () => {
                    {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                  </button>
                </div>
-               <div className="hidden md:flex items-center">
+               {user? <div className="hidden md:flex items-center">
+                 <a href="/dashboard" className="ml-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                   {user}
+                 </a>
+               </div>:<div className="hidden md:flex items-center">
                  <a href="/auth/login " className="ml-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
                    Login
                  </a>
-               </div>
+               </div>}
              </div>
            </div>
            

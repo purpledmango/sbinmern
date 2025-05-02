@@ -1,31 +1,13 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-const Schema = mongoose.Schema;
+const { Schema } = mongoose;
 
-// Create a counter model for auto-increment
-const CounterSchema = new Schema({
-  _id: { type: String, required: true },
-  seq: { type: Number, default: 0 }
-});
-const Counter = mongoose.model('Counter', CounterSchema);
-
-// Server credentials schema (stored encrypted)
-const NodeSchema = new Schema({
-  nodeId: {
-    type: Number,
-    unique: true
-  },
+const CredentialsSchema = new Schema({
   host: {
     type: String,
     required: true,
-    trim: true,
-    validate: {
-      validator: function(v) {
-        // Basic hostname or IP validation
-        return /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/.test(v);
-      },
-      message: props => `${props.value} is not a valid hostname or IP address!`
-    }
+    trim: true
   },
   port: {
     type: Number,
@@ -36,61 +18,204 @@ const NodeSchema = new Schema({
   username: {
     type: String,
     required: true,
-    trim: true,
-    validate: {
-      validator: function(v) {
-        // Unix username validation (3-32 chars, no special chars except _ and -)
-        return /^[a-z_][a-z0-9_-]{2,31}$/.test(v);
-      },
-      message: props => `${props.value} is not a valid username! Must start with letter or underscore, 3-32 characters, and only contain letters, numbers, hyphens or underscores.`
+    trim: true
+  },
+  password: {
+    type: String,
+    select: false,
+    set: function(password) {  // Removed async here since we're not awaiting
+      if (!password) return undefined;
+      const salt = bcrypt.genSaltSync(12);
+      return bcrypt.hashSync(password, salt);
     }
   },
-  encryptedPassword: {
+  privateKey: {
     type: String,
-    // select: false // Never return this field by default
+    select: false,
+    trim: true
   },
-  encryptedPrivateKey: {
+  passphrase: {
     type: String,
-    select: false // Never return this field by default
+    select: false,
+    set: function(passphrase) {  // Removed async here
+      if (!passphrase) return undefined;
+      const salt = bcrypt.genSaltSync(12);
+      return bcrypt.hashSync(passphrase, salt);
+    }
+  }
+}, { _id: false });
+
+const SshStatusSchema = new Schema({
+  connected: {
+    type: Boolean,
+    required: true,
+    default: false  // Added default value
   },
-  sshKeyName: {
+  lastChecked: {
+    type: Date,
+    default: Date.now
+  },
+  authMethod: {
     type: String,
+    enum: ['password', 'privateKey', 'none'],
+    required: true,
+    default: 'none'  // Added default value
+  },
+  error: {
+    type: String,
+    default: null
+  }
+}, { _id: false });
+
+const NodeSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
     trim: true,
-    maxlength: 64
+    unique: true
+  },
+  nid: {
+    type: String,
+    required: true,
+    unique: true,
+    default: () => uuidv4().split('-')[0], // Takes first 8 chars (first segment)
+    validate: {
+      validator: function(v) {
+        // Validate it's 8 hex characters
+        return /^[0-9a-f]{8}$/i.test(v);
+      },
+      message: props => `${props.value} is not a valid 8-character hex ID!`
+    }
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  credentials: {
+    type: CredentialsSchema,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'pending'],
+    default: 'pending'
+  },
+  sshStatus: {
+    type: SshStatusSchema,
+    required: true,
+    default: () => ({
+      connected: false,
+      lastChecked: new Date(),
+      authMethod: 'none',
+      error: null
+    })
+  },
+  lastConnection: {
+    type: Date,
+    default: null
+  },
+  createdBy: {
+    type: String,
+    required: true
+  },
+  tags: {
+    type: [String],
+    default: []
+  }
+}, {
+  timestamps: true,
+  toJSON: {
+    transform: function(doc, ret) {
+      delete ret.credentials.password;
+      delete ret.credentials.privateKey;
+      delete ret.credentials.passphrase;
+      return ret;
+    }
   }
 });
 
-// Auto-increment plugin replacement
+NodeSchema.methods.verifyCredentials = async function(password) {
+  if (this.credentials.password) {
+    return await bcrypt.compare(password, this.credentials.password);
+  }
+  return false;
+};
+
 NodeSchema.pre('save', async function(next) {
-  if (!this.isNew) return next();
-  
-  try {
-    const counter = await Counter.findByIdAndUpdate(
-      { _id: 'nodeId' },
-      { $inc: { seq: 1 } },
-      { new: true, upsert: true }
-    );
-    this.nodeId = counter.seq;
-    next();
-  } catch (err) {
-    next(err);
+  if (this.isModified('credentials') || !this.sshStatus.connected) {
+    try {
+      const node = await this.model('Node')
+        .findById(this._id)
+        .select('+credentials.password +credentials.privateKey +credentials.passphrase');
+      
+      const creds = node ? node.credentials : this.credentials;
+      const sshCheck = await this.model('Node').verifySSHConnection(creds);
+      
+      this.sshStatus = {
+        connected: sshCheck.success,
+        lastChecked: new Date(),
+        authMethod: sshCheck.authMethod || 'none',
+        error: sshCheck.error || null
+      };
+      
+      this.status = sshCheck.success ? 'active' : 'inactive';
+      this.lastConnection = sshCheck.success ? new Date() : null;
+    } catch (error) {
+      this.sshStatus = {
+        connected: false,
+        lastChecked: new Date(),
+        authMethod: 'none',
+        error: error.message
+      };
+      this.status = 'inactive';
+    }
   }
+  next();
 });
 
-// Add instance method to test SSH connection
-NodeSchema.methods.testConnection = async function() {
-  const { exec } = await import('child_process');
-  const util = await import('util');
-  const execPromise = util.promisify(exec);
+NodeSchema.statics.verifySSHConnection = async function(credentials) {
+  const ssh = new (require('node-ssh'))();
   
+  const connectionOptions = {
+    host: credentials.host,
+    port: credentials.port || 22,
+    username: credentials.username,
+    readyTimeout: 8000,
+    connectTimeout: 8000
+  };
+
   try {
-    const cmd = `ssh -p ${this.port} ${this.username}@${this.host} echo "Connection successful"`;
-    const { stdout } = await execPromise(cmd, { timeout: 5000 });
-    return { success: true, message: stdout.trim() };
+    if (credentials.privateKey) {
+      connectionOptions.privateKey = credentials.privateKey;
+      if (credentials.passphrase) {
+        connectionOptions.passphrase = credentials.passphrase;
+      }
+    } else if (credentials.password) {
+      connectionOptions.password = credentials.password;
+    } else {
+      return { success: false, authMethod: 'none', error: 'No authentication method' };
+    }
+
+    await ssh.connect(connectionOptions);
+    const result = await ssh.execCommand('echo "Connection test"');
+    
+    if (result.code !== 0) throw new Error(result.stderr);
+    
+    return { 
+      success: true,
+      authMethod: credentials.privateKey ? 'privateKey' : 'password' 
+    };
   } catch (error) {
-    return { success: false, error: error.message };
+    return { 
+      success: false,
+      authMethod: credentials.privateKey ? 'privateKey' : 'password',
+      error: error.message 
+    };
+  } finally {
+    if (ssh.isConnected()) ssh.dispose();
   }
 };
 
-const NodeModel = mongoose.model("Node", NodeSchema);
+const NodeModel = mongoose.model('Node', NodeSchema);
+
 export default NodeModel;

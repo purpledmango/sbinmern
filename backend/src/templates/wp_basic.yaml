@@ -1,0 +1,93 @@
+version: '3.8'
+
+networks:
+  frontend_${USER_ID}:
+    driver: bridge
+  backend_${USER_ID}:
+    driver: bridge
+    internal: true
+
+services:
+  nginx_${USER_ID}:
+    image: nginx:1.25-alpine
+    container_name: wp_nginx_${USER_ID}
+    ports:
+      - "${NGINX_PORT}:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_cache_${USER_ID}:/var/cache/nginx
+    networks:
+      - frontend_${USER_ID}
+    restart: unless-stopped
+
+  wordpress_${USER_ID}:
+    image: wordpress:6.3-php8.2-apache
+    container_name: wp_app_${USER_ID}
+    environment:
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', '${PROJECT_IP}');
+        define('WP_SITEURL', '${PROJECT_DOMAIN}');
+    volumes:
+      - wordpress_data_${USER_ID}:/var/www/html
+    networks:
+      - frontend_${USER_ID}
+      - backend_${USER_ID}
+    depends_on:
+      db_${USER_ID}:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db_${USER_ID}:
+    image: mysql:5.7
+    container_name: wp_db_${USER_ID}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data_${USER_ID}:/var/lib/mysql
+    networks:
+      - backend_${USER_ID}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  wordpress_data_${USER_ID}:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/${USER_ID}  # Relative path
+      o: bind
+  db_data_${USER_ID}:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/db_${USER_ID}
+      o: bind
+  nginx_cache_${USER_ID}:
+    driver: local
+
+
+
+# export USER_ID=user2
+# export NGINX_PORT=8080
+# export WORDPRESS_DB_HOST=localhost
+# export WORDPRESS_DB_USER=wp_user
+# export WORDPRESS_DB_PASSWORD=wp_password
+# export WORDPRESS_DB_NAME=wp_db
+# export MYSQL_ROOT_PASSWORD=mysql_root_password
+# export MYSQL_DATABASE=wp_db
+# export MYSQL_USER=wp_user
+# export MYSQL_PASSWORD=wp_password
+# export PROJECT_IP=127.0.0.1
+# export PROJECT_DOMAIN=example.com
