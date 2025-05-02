@@ -6,6 +6,7 @@ import { useState } from 'react';
 import axiosInstance from '@/utils/axiosInstance';
 // import { l } from 'framer-motion/dist/types.d-DDSxwf0n';
 
+import Image from 'next/image';
 const Nav = () => {
   
   const [user, setUser] = useState(null);
@@ -72,9 +73,14 @@ const Nav = () => {
              <div className="flex justify-between h-16">
                <div className="flex items-center">
                  <div className="flex-shrink-0 flex items-center">
-                   <div className="h-8 w-8 bg-indigo-600 rounded-full"></div>
-                   <span className="ml-2 font-bold text-xl">HostAstra</span>
-                 </div>
+                   {/* <div className="h-8 w-8 bg-indigo-600 rounded-full"></div>
+                   <span className="ml-2 font-bold text-xl">HostAstra</span> */}
+                   <Image 
+                    src="/images/hostastra-logo.png" 
+                    alt="Hostastra Logo" 
+                    width={200} 
+                    height={200} 
+    />                 </div>
                </div>
                <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4">
                  <a href="/" className="px-3 py-2 text-sm font-medium text-indigo-600">Home</a>

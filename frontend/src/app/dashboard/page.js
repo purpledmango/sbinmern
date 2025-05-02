@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Overview from '../components/Overview'
 import { useRouter } from 'next/navigation'
 import axiosInstance from '@/utils/axiosInstance'
+import Image from 'next/image'
 
 const Dashboard = () => {
   const router = useRouter()
@@ -117,12 +118,34 @@ const Dashboard = () => {
               isDarkMode ? 'bg-slate-800 border-r border-slate-700' : 'bg-white border-r border-slate-200'
             } shadow-lg lg:shadow-md ${isSidebarOpen ? 'w-64' : 'w-20'}`}
           >
-            <div className={`p-6 ${!isSidebarOpen && 'flex justify-center'}`}>
-              <div className="flex items-center space-x-2">
-                <Rocket className="h-8 w-8 text-indigo-600" />
-                {isSidebarOpen && <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>Dashboard</h1>}
-              </div>
-            </div>
+            <div className={`p-6 h-24 ${!isSidebarOpen && 'flex justify-center items-center'}`}>
+  <div className="flex items-center space-x-2">
+    <div className={`
+      rounded-full 
+      overflow-hidden 
+      border-2 
+      ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}
+      shadow-lg
+      hover:shadow-xl
+      transition-all
+      duration-300
+      ${isSidebarOpen ? 'w-12 h-12' : 'w-16 h-16'}
+    `}>
+      <Image 
+        src="/images/icon.png" 
+        width={isSidebarOpen ? 48 : 64} 
+        height={isSidebarOpen ? 48 : 64} 
+        alt="Hostastra Dashboard"
+        className="object-cover w-full h-full"
+      />
+    </div>
+    {isSidebarOpen && (
+      <h1 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+        HostAstra.com
+      </h1>
+    )}
+  </div>
+</div>
 
             <nav className="mt-8 px-4">
               <NavItem 
