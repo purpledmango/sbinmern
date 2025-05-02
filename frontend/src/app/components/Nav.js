@@ -7,6 +7,7 @@ import axiosInstance from '@/utils/axiosInstance';
 // import { l } from 'framer-motion/dist/types.d-DDSxwf0n';
 
 import Image from 'next/image';
+import Link from 'next/link';
 const Nav = () => {
   
   const [user, setUser] = useState(null);
@@ -83,12 +84,12 @@ const Nav = () => {
     />                 </div>
                </div>
                <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4">
-                 <a href="/" className="px-3 py-2 text-sm font-medium text-indigo-600">Home</a>
-                 <a href="/wordpress" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">WordPress</a>
-                 <a href="/magento" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">Magento</a>
-                 <a href="/pricing" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">Pricing</a>
-                 <a href="/about" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">About</a>
-                 <a href="/contact" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">Contact</a>
+                 <Link href="/" className="px-3 py-2 text-sm font-medium text-indigo-600">Home</Link>
+                 <Link href="/wordpress" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">WordPress</Link>
+                 <Link href="/magento" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">Magento</Link>
+                 <Link href="/pricing" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">Pricing</Link>
+                 <Link href="/about" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">About</Link>
+                 <Link href="/contact" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600">Contact</Link>
                </div>
                <div className="flex items-center md:hidden">
                  <button 
@@ -114,13 +115,13 @@ const Nav = () => {
            {isMenuOpen && (
              <div className="md:hidden">
                <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                 <a href="/" className="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 bg-indigo-50">Home</a>
-                 <a href="/wordpress" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">WordPress</a>
-                 <a href="/magento" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">Magento</a>
-                 <a href="/pricing" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">Pricing</a>
-                 <a href="/about" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">About</a>
-                 <a href="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">Contact</a>
-                 <a href="/getting-started" className="block px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700">Get Started</a>
+                 <Link href="/" className="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 bg-indigo-50">Home</Link>
+                 <Link href="/wordpress" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">WordPress</Link>
+                 <Link href="/magento" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">Magento</Link>
+                 <Link href="/pricing" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">Pricing</Link>
+                 <Link href="/about" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">About</Link>
+                 <Link href="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600">Contact</Link>
+                 <Link href="/getting-started" className="block px-3 py-2 rounded-md text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700">Get Started</Link>
                </div>
              </div>
            )}
