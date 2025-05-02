@@ -1,6 +1,4 @@
 "use client";
-// import { useState, useEffect } from 'react';
-
 import Head from 'next/head';
 import { Store, ShoppingCart, Calendar, Bell, Mail, Clock, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -200,7 +198,7 @@ export default function SelectiveDisplay() {
                       {isSubmitted ? (
                         <div className="bg-green-500/20 p-4 rounded-lg backdrop-blur-md border border-green-500/30">
                           <p className="text-green-200">
-                            Thanks! We'll notify you when this feature launches.
+                            Thanks! We&apos;ll notify you when this feature launches.
                           </p>
                         </div>
                       ) : (

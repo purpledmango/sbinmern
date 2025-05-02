@@ -34,7 +34,7 @@ const Dashboard = () => {
   }, [])
 
   useEffect(() => {
-    fetchUser()
+    fetchUser();
   }, [])
 
   const fetchUser = async () => {

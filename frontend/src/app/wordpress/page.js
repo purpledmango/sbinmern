@@ -102,7 +102,6 @@ export default function WordPressPage() {
                   height={400}
                   className="w-full"
                 />
-                {/* <div className="absolute inset-0 bg-gradient-to-t from-indigo-600 to-indigo-400 mix-blend-multiply opacity-20"></div> */}
               </div>
               
               {/* Floating badges */}
@@ -117,51 +116,51 @@ export default function WordPressPage() {
         </div>
       </div>
 
-      {/* Problem/Solution Section with Smooth Animation */}
+      {/* Problem/Solution Section */}
       <div className="py-24 bg-white">
-  <div className="max-w-6xl mx-auto px-4 sm:px-6">
-    {/* Section Header */}
-    <div className="text-center max-w-3xl mx-auto mb-16">
-      <div className="inline-flex items-center justify-center p-2 bg-indigo-50 rounded-full mb-6">
-        <Cloud className="h-6 w-6 text-indigo-600" />
-      </div>
-      
-      <h2 className="text-sm font-medium text-indigo-600 uppercase tracking-wider">WordPress Challenges</h2>
-      
-      <h3 className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
-        Common Problems We Solve
-      </h3>
-      
-      <p className="mt-4 text-lg text-gray-600">
-        Traditional WordPress hosting often comes with limitations we've eliminated
-      </p>
-    </div>
-    
-    {/* Problem Cards */}
-    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-      {problems.map((problem, index) => (
-        <div
-          key={index}
-          className="hover:translate-y-1 transition-all duration-300"
-        >
-          <div className="h-full bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md p-6">
-            <div className="flex items-center mb-4">
-              <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100 text-indigo-600">
-                <Zap className="h-5 w-5" />
-              </div>
-              <span className="ml-3 text-xs font-semibold text-indigo-600 uppercase tracking-wider">Problem {index + 1}</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          {/* Section Header */}
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center justify-center p-2 bg-indigo-50 rounded-full mb-6">
+              <Cloud className="h-6 w-6 text-indigo-600" />
             </div>
-            <p className="text-gray-900 font-medium">
-              {problem}
+            
+            <h2 className="text-sm font-medium text-indigo-600 uppercase tracking-wider">WordPress Challenges</h2>
+            
+            <h3 className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
+              Common Problems We Solve
+            </h3>
+            
+            <p className="mt-4 text-lg text-gray-600">
+              Traditional WordPress hosting often comes with limitations we&apos;ve eliminated
             </p>
           </div>
+          
+          {/* Problem Cards */}
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {problems.map((problem, index) => (
+              <div
+                key={index}
+                className="hover:translate-y-1 transition-all duration-300"
+              >
+                <div className="h-full bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100 text-indigo-600">
+                      <Zap className="h-5 w-5" />
+                    </div>
+                    <span className="ml-3 text-xs font-semibold text-indigo-600 uppercase tracking-wider">Problem {index + 1}</span>
+                  </div>
+                  <p className="text-gray-900 font-medium">
+                    {problem}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-</div>
+      </div>
 
-      {/* Features Section with 3D Rotation */}
+      {/* Features Section */}
       <div className="py-16 bg-slate-50 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="lg:text-center">
@@ -205,68 +204,69 @@ export default function WordPressPage() {
 
       {/* Deployment Process */}
       <div className="py-24 bg-white">
-  <div className="max-w-5xl mx-auto px-4 sm:px-6">
-    <div className="text-center mb-16">
-      <Server className="h-10 w-10 text-indigo-600 mx-auto mb-4" />
-      <h2 className="text-sm text-indigo-600 font-semibold tracking-wide uppercase">Simple Setup</h2>
-      <p className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
-        Get Started in Minutes
-      </p>
-    </div>
-    
-    <div className="relative">
-      {/* Timeline line */}
-      <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-indigo-100"></div>
-      
-      <div className="space-y-12 md:space-y-24">
-        {[
-          {
-            title: "Select WordPress",
-            description: "Choose WordPress from our one-click application installer",
-            icon: Server
-          },
-          {
-            title: "Configure Resources",
-            description: "Select your dedicated CPU, RAM and storage allocation",
-            icon: Cpu
-          },
-          {
-            title: "Launch Instance",
-            description: "Deploy your optimized WordPress environment instantly",
-            icon: Rocket
-          },
-          {
-            title: "Access Dashboard",
-            description: "Login to your auto-configured WordPress admin panel",
-            icon: Lock
-          }
-        ].map((item, index) => (
-          <div key={index} className="relative">
-            {/* Step number */}
-            <div className="md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 flex items-center justify-center w-12 h-12 rounded-full bg-white border-2 border-indigo-500 text-indigo-600 font-bold mb-4 md:mb-0 mx-auto">
-              {index + 1}
-            </div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-16">
+            <Server className="h-10 w-10 text-indigo-600 mx-auto mb-4" />
+            <h2 className="text-sm text-indigo-600 font-semibold tracking-wide uppercase">Simple Setup</h2>
+            <p className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
+              Get Started in Minutes
+            </p>
+          </div>
+          
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-indigo-100"></div>
             
-            {/* Content card */}
-            <div className={`md:w-5/12 ${index % 2 === 0 ? 'md:pr-12 md:mr-auto' : 'md:pl-12 md:ml-auto'}`}>
-              <div className="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
-                <div className="flex items-center mb-4">
-                  <div className="bg-indigo-100 p-2 rounded-lg">
-                    <item.icon className="h-5 w-5 text-indigo-600" />
+            <div className="space-y-12 md:space-y-24">
+              {[
+                {
+                  title: "Select WordPress",
+                  description: "Choose WordPress from our one-click application installer",
+                  icon: Server
+                },
+                {
+                  title: "Configure Resources",
+                  description: "Select your dedicated CPU, RAM and storage allocation",
+                  icon: Cpu
+                },
+                {
+                  title: "Launch Instance",
+                  description: "Deploy your optimized WordPress environment instantly",
+                  icon: Rocket
+                },
+                {
+                  title: "Access Dashboard",
+                  description: "Login to your auto-configured WordPress admin panel",
+                  icon: Lock
+                }
+              ].map((item, index) => (
+                <div key={index} className="relative">
+                  {/* Step number */}
+                  <div className="md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 flex items-center justify-center w-12 h-12 rounded-full bg-white border-2 border-indigo-500 text-indigo-600 font-bold mb-4 md:mb-0 mx-auto">
+                    {index + 1}
                   </div>
-                  <h3 className="ml-3 text-lg font-medium text-gray-900">{item.title}</h3>
+                  
+                  {/* Content card */}
+                  <div className={`md:w-5/12 ${index % 2 === 0 ? 'md:pr-12 md:mr-auto' : 'md:pl-12 md:ml-auto'}`}>
+                    <div className="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
+                      <div className="flex items-center mb-4">
+                        <div className="bg-indigo-100 p-2 rounded-lg">
+                          <item.icon className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <h3 className="ml-3 text-lg font-medium text-gray-900">{item.title}</h3>
+                      </div>
+                      <p className="text-gray-600">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-gray-600">
-                  {item.description}
-                </p>
-              </div>
+              ))}
             </div>
           </div>
-        ))}
+        </div>
       </div>
-    </div>
-  </div>
-</div>
+
       {/* Sticky CTA button */}
       <div className="fixed bottom-10 right-10 z-50">
         <a 

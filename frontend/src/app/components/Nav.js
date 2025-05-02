@@ -1,6 +1,6 @@
 "use client"
 
-import { Menu } from 'lucide-react';
+import { Menu, XIcon } from 'lucide-react';
 import React, { use, useEffect } from 'react'
 import { useState } from 'react';
 import axiosInstance from '@/utils/axiosInstance';
@@ -96,7 +96,7 @@ const Nav = () => {
                    onClick={() => setIsMenuOpen(!isMenuOpen)}
                    className="p-2 rounded-md text-slate-600 hover:text-slate-800 focus:outline-none"
                  >
-                   {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                   {isMenuOpen ? <XIcon size={24} /> : <Menu size={24} />}
                  </button>
                </div>
                {user? <div className="hidden md:flex items-center">
