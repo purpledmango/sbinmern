@@ -1,0 +1,8 @@
+[2025-05-03T15:15:47.285Z] [DEP-1bb62d65] Starting WordPress deployment
+[2025-05-03T15:15:47.399Z] [DEP-1bb62d65] Error during deployment: Deployment validation failed: status: `connecting` is not a valid enum value for path `status`.
+[2025-05-03T15:15:47.407Z] [DEP-1bb62d65] Stack trace: ValidationError: Deployment validation failed: status: `connecting` is not a valid enum value for path `status`.
+    at Document.invalidate (/home/nitish/sandbox/sbinmern/backend/node_modules/mongoose/lib/document.js:3351:32)
+    at /home/nitish/sandbox/sbinmern/backend/node_modules/mongoose/lib/document.js:3112:17
+    at /home/nitish/sandbox/sbinmern/backend/node_modules/mongoose/lib/schemaType.js:1407:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+[2025-05-03T15:15:47.614Z] [DEP-1bb62d65] Updated deployment status to failed in database

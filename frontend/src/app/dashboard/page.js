@@ -1,12 +1,13 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { Rocket, Home, PieChart, Users, Settings, Bell, ChevronDown, Menu, X } from 'lucide-react'
+import { Rocket, Home, PieChart, Users, Settings, Bell, ChevronDown, Menu, X, CpuIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Overview from '../components/Overview'
 import { useRouter } from 'next/navigation'
 import axiosInstance from '@/utils/axiosInstance'
 import Image from 'next/image'
+import Instances from '../components/Instances'
 
 const Dashboard = () => {
   const router = useRouter()
@@ -158,13 +159,13 @@ const Dashboard = () => {
                 }}
               />
               <NavItem 
-                icon={PieChart} 
-                label="Analytics" 
-                active={tab === 'analytics'} 
+                icon={CpuIcon} 
+                label="Instances" 
+                active={tab === 'Instances'} 
                 onClick={() => {
-                  setTab('analytics')
+                  setTab('instances')
                   if (window.innerWidth < 1024) setIsMobileMenuOpen(false)
-                }}
+                }}  
               />
               <NavItem 
                 icon={Users} 
@@ -265,17 +266,8 @@ const Dashboard = () => {
         <main className="p-6">
           {tab === 'overview' && <Overview isDarkMode={isDarkMode} />}
           
-          {tab === 'analytics' && (
-            <div className={`rounded-xl shadow-sm p-6 ${
-              isDarkMode ? 'bg-slate-800/80 border border-slate-700' : 'bg-white border border-slate-200'
-            } backdrop-blur-sm`}>
-              <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                Analytics Dashboard
-              </h3>
-              <div className="h-96 flex items-center justify-center text-slate-500">
-                Analytics content will appear here
-              </div>
-            </div>
+          {tab === 'instances' && (
+            <Instances/>
           )}
 
           {tab === 'users' && (

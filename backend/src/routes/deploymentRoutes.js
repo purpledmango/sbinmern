@@ -3,6 +3,8 @@ import { NodeSSH } from 'node-ssh';
 import Deployment from '../models/deploymentModel.js';
 import NodeModel from '../models/infraModel.js';
 import User from '../models/userModel.js';
+import { deployWordPress } from '../utils/deployWp.js';
+import checkCredentialsAndUpdateDeployment from '../utils/checkDeploymentStatus.js';
 const router = express.Router();
 
 // Helper function to generate random available port
@@ -57,259 +59,164 @@ async function checkSystemResources(ssh) {
   }
 }
 
-// Create new deployment
 router.post('/', async (req, res) => {
-  const ssh = new NodeSSH();
-  
   try {
-    const { uid, nodeId, deploymentName, wpConfig } = req.body;
-    console.log("Request body", req.body)
+    // Get user ID from authenticated request
+    const { uid } = req.user;
+    const { deploymentName, deploymentType = 'wordpress' } = req.body;
     
+    console.log(`New deployment request from user ${uid} for ${deploymentName}`);
+
     // Validate required fields
-    if (!uid || !nodeId || !deploymentName) {
-      return res.status(400).json({ 
-        status: 'error', 
-        message: 'Missing required fields' 
+    if (!uid || !deploymentName) {
+      console.warn('Validation failed - missing uid or deploymentName');
+      return res.status(400).json({
+        success: false,
+        message: "UID and deploymentName are required",
+        code: "MISSING_REQUIRED_FIELDS"
       });
     }
-    
-    // Check if client exists
-    const client = await User.findOne({uid});
-    if (!client) {
-      return res.status(404).json({ 
-        status: 'error', 
-        message: 'Client not found' 
-      });
-    }
-    
-    // Check if node exists
-    const node = await NodeModel.findById(nodeId);
-    if (!node) {
-      return res.status(404).json({ 
-        status: 'error', 
-        message: 'Node not found' 
-      });
-    }
-    
-    // Check if a deployment with the same name already exists for this client
-    const existingDeployment = await Deployment.findOne({ 
-      uid, 
-      deploymentName 
-    });
-    
-    if (existingDeployment) {
-      return res.status(409).json({ 
-        status: 'error', 
-        message: 'A deployment with this name already exists for this client' 
-      });
-    }
-    
-    // Connect to the node
-    await ssh.connect({
-      host: node.host,
-      port: parseInt(node.port, 10),
-      username: node.username,
-      password: node.encryptedPassword,
-      tryKeyboard: true,
-      readyTimeout: 10000
-    });
-    
-    // Check system resources
-    const resources = await checkSystemResources(ssh);
-    
-    if (!resources.dockerInstalled) {
-      ssh.dispose();
-      return res.status(400).json({ 
-        status: 'error', 
-        message: 'Docker is not installed on the target node', 
-        resources 
-      });
-    }
-    
-    if (!resources.sufficientDisk || !resources.sufficientRAM) {
-      ssh.dispose();
-      return res.status(400).json({ 
-        status: 'error', 
-        message: 'Insufficient system resources on the target node', 
-        resources 
-      });
-    }
-    
-    // Generate random ports
-    const httpPort = await findAvailablePort(ssh, 10000, 20000);
-    const httpsPort = await findAvailablePort(ssh, 20001, 30000);
-    const mysqlPort = await findAvailablePort(ssh, 30001, 40000);
-    
-    // Create safe container name (alphanumeric and dashes only)
-    const containerName = `wp-${uid.substring(0, 5)}-${deploymentName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
-    
-    // Set the siteUrl in wpConfig based on the node's host and port
-    const updatedWpConfig = {
-      ...wpConfig,
-      siteUrl: `http://${node.host}:${httpPort}`
-    };
-    
-    // Create a new deployment record
-    const newDeployment = new Deployment({
+
+    // Create new deployment record with initial configuration
+    const deployment = new Deployment({
       uid,
-      nodeId,
-      deploymentId: 1,
       deploymentName,
+      deploymentType,
       status: 'initiated',
-      containerName,
-      image: 'wordpress:latest',
-      wpConfig: updatedWpConfig || {},
-      ports: {
-        http: httpPort,
-        https: httpsPort,
-        mysqlPort
+      wpConfig: {
+        url: process.env.WP_DEFAULT_URL || 'http://localhost',
+        port: process.env.WP_DEFAULT_PORT || 64395,
+        databaseName: 'wpdb',
+        databaseUser: 'wpuser',
+        databasePassword: generateSecurePassword(),
+        rootPassword: generateSecurePassword()
       },
-  
+      logs: [`${new Date().toISOString()} - Deployment initiated by user ${uid}`]
     });
-    
-    // Save initial deployment record
-    await newDeployment.save();
-    
-    // Update status to in-progress
-    await newDeployment.updateStatus('in-progress', 'Deployment started');
-    
-    // Add log entry
-    await newDeployment.addLog('info', `Deployment initiated on node ${node.host}`);
-    
-    // Create docker-compose file content
-    const composeContent = `
-version: '3'
 
-services:
-  db:
-    image: mysql:5.7
-    volumes:
-      - db_data:/var/lib/mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${updatedWpConfig?.databasePassword || 'wordpress_db_password'}
-      MYSQL_DATABASE: ${updatedWpConfig?.databaseName || 'wordpress'}
-      MYSQL_USER: ${updatedWpConfig?.databaseUser || 'wordpress_user'}
-      MYSQL_PASSWORD: ${updatedWpConfig?.databasePassword || 'wordpress_db_password'}
-    container_name: ${containerName}-db
+    await deployment.save();
+    console.log(`Deployment record created: ${deployment.deploymentId}`);
 
-  wordpress:
-    depends_on:
-      - db
-    image: wordpress:latest
-    ports:
-      - "${httpPort}:80"
-    restart: always
-    environment:
-      WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_USER: ${updatedWpConfig?.databaseUser || 'wordpress_user'}
-      WORDPRESS_DB_PASSWORD: ${updatedWpConfig?.databasePassword || 'wordpress_db_password'}
-      WORDPRESS_DB_NAME: ${updatedWpConfig?.databaseName || 'wordpress'}
-      WORDPRESS_TABLE_PREFIX: ${updatedWpConfig?.tablePrefix || 'wp_'}
-      WORDPRESS_CONFIG_EXTRA: define('WP_SITEURL', '${updatedWpConfig?.siteUrl || `http://${node.host}:${httpPort}`}'); define('WP_HOME', '${updatedWpConfig?.siteUrl || `http://${node.host}:${httpPort}`}');
-    volumes:
-      - wordpress_data:/var/www/html
-    container_name: ${containerName}
-
-volumes:
-  db_data:
-  wordpress_data:
-    `;
-    
-    // Create deployment directory
-    await ssh.execCommand(`mkdir -p /opt/deployments/${containerName}`);
-    
-    // Write docker-compose file
-    await ssh.execCommand(`cat > /opt/deployments/${containerName}/docker-compose.yml << 'EOL'
-${composeContent}
-EOL`);
-    
-    // Deploy containers
-    const deployResult = await ssh.execCommand(`cd /opt/deployments/${containerName} && docker-compose up -d`);
-    
-    ssh.dispose();
-    
-    // Fix: Don't treat normal docker-compose output containing "Creating" as an error
-    if (deployResult.stderr && 
-        !deployResult.stderr.includes('Creating network') && 
-        !deployResult.stderr.includes('Creating volume') && 
-        !deployResult.stderr.includes('Creating container')) {
-      // Real deployment failure
-      await newDeployment.updateStatus('failed', deployResult.stderr);
-      await newDeployment.addLog('error', deployResult.stderr);
-      
-      return res.status(500).json({ 
-        status: 'error', 
-        message: 'Deployment failed', 
-        error: deployResult.stderr,
-        deployment: newDeployment
-      });
-    }
-    
-    console.log("node ", node);
-    // Get container IDs
-    await ssh.connect({
-      host: node.host,
-      port: parseInt(node.port, 10),
-      username: node.username,
-      password: node.encryptedPassword  // Fixed: Using encryptedPassword consistently
-    });
-    
-    const containerInfo = await ssh.execCommand(`docker ps --filter "name=${containerName}" --format "{{.ID}}"`);
-    
-    // if (containerInfo.stdout) {
-    //   newDeployment.containerId = containerInfo.stdout.trim();
-    // }
-    
-    // Update deployment record with success
-    await newDeployment.updateStatus('completed', 'Deployment completed successfully');
-    await newDeployment.addLog('info', `WordPress deployed successfully on ports HTTP: ${httpPort}, HTTPS: ${httpsPort}, MySQL: ${mysqlPort}`);
-    
-    ssh.dispose();
-    
-    // Return the deployment info
-    res.status(201).json({
-      status: 'success',
-      message: 'Deployment created successfully',
-      deployment: newDeployment,
-      access: {
-        url: updatedWpConfig.siteUrl,
-        ports: {
-          http: httpPort,
-          https: httpsPort,
-          mysql: mysqlPort
-        }
+    // Immediate response to client
+    res.status(202).json({
+      success: true,
+      message: "Deployment process started",
+      deployment: {
+        id: deployment.deploymentId,
+        name: deployment.deploymentName,
+        status: deployment.status,
+        created: deployment.createdAt,
+        monitorEndpoint: `/api/deployments/${deployment.deploymentId}/status`
       }
     });
-    
+
+    // Background processing with 2-second delay
+    setTimeout(() => {
+      processDeploymentAsync(deployment.deploymentId)
+        .catch(err => {
+          console.error(`Background processing error for ${deployment.deploymentId}:`, err);
+        });
+    }, 2000);
+
   } catch (error) {
-    console.error('Deployment error:', error);
-    
-    if (ssh.isConnected()) {
-      ssh.dispose();
-    }
-    
-    // If we have a deployment in progress, mark it as failed
-    if (req.body.deploymentId) {
-      try {
-        const deployment = await Deployment.findById(req.body.deploymentId);
-        if (deployment) {
-          await deployment.updateStatus('failed', error.message);
-          await deployment.addLog('error', error.message);
-        }
-      } catch (logError) {
-        console.error('Failed to update deployment status:', logError);
-      }
-    }
-    
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Deployment failed', 
-      error: error.message 
+    console.error("Deployment endpoint error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error during deployment initiation",
+      error: error.message,
+      code: "DEPLOYMENT_INIT_FAILURE"
     });
   }
 });
 
+// Async background processing function
+async function processDeploymentAsync(deploymentId) {
+  try {
+    console.log(`Starting background processing for ${deploymentId}`);
+    
+    // Step 1: Deploy WordPress
+    const deployment = await Deployment.findOne({deploymentId});
+    if (!deployment) {
+      throw new Error(`Deployment ${deploymentId} not found`);
+    }
+
+    await deployment.updateStatus('in-progress', 'Starting WordPress installation');
+    await deployWordPress(deploymentId);
+    
+    
+    await deployment.updateStatus('completed', 'Verifying installation and credentials');
+    // Step 2: Verify and update credentials
+    await checkCredentialsAndUpdateDeployment(deploymentId);
+
+    // Final status update
+    console.log(`Deployment ${deploymentId} completed successfully`);
+
+  } catch (error) {
+    console.error(`Error in background processing for ${deploymentId}:`, error);
+    
+    // Update deployment status to failed
+    await Deployment.findOneAndUpdate(
+      { deploymentId },
+      { 
+        status: 'failed',
+        $push: { 
+          logs: `${new Date().toISOString()} - Error: ${error.message}` 
+        }
+      }
+    );
+  }
+}
+
+router.get('/:deploymentId/status', async (req, res) => {
+  try {
+    const { deploymentId } = req.params;
+    const { uid } = req.user;
+    
+    // Find deployment record
+    const deployment = await Deployment.findOne({ 
+      deploymentId, 
+      uid // Ensure the user owns this deployment
+    });
+    
+    if (!deployment) {
+      return res.status(404).json({
+        success: false,
+        message: "Deployment not found"
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      deployment: {
+        id: deployment.deploymentId,
+        name: deployment.deploymentName,
+        status: deployment.status,
+        statusMessage: deployment.statusMessage,
+        created: deployment.deploymentDate,
+        completed: deployment.deploymentCompleted,
+        url: deployment.status === 'completed' ? 
+          `${deployment.wpConfig.url}:${deployment.wpConfig.port}` : 
+          null
+      }
+    });
+  } catch (error) {
+    console.log("Status Error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve deployment status",
+      error: error.message
+    });
+  }
+});
+// Helper function to generate secure passwords
+function generateSecurePassword(length = 16) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+}
 // Get all deployments
 router.get('/', async (req, res) => {
   try {
@@ -328,7 +235,17 @@ router.get('/', async (req, res) => {
     res.json({
       status: 'success',
       count: deployments.length,
-      deployments
+      deployments: deployments.map(deployment => ({
+        // Include all other fields you want to keep
+        deploymentId: deployment.deploymentId,
+        deploymentType:deployment.deploymentType,
+        deploymentName: deployment.deploymentName,
+        status: deployment.status,
+        // Only include the URL from wpConfig
+        wpUrl: deployment.wpConfig?.url,
+        // Add any other top-level fields you need
+        createdAt: deployment.createdAt
+      }))
     });
   } catch (error) {
     res.status(500).json({ 
@@ -342,24 +259,70 @@ router.get('/', async (req, res) => {
 // Get deployment by ID
 router.get('/:deploymentId', async (req, res) => {
   try {
-    const deployment = await Deployment.findOne({deploymentId})
-      .populate('nodeId', 'host name');
-      
-    if (!deployment) {
-      return res.status(404).json({ 
-        status: 'error', 
-        message: 'Deployment not found' 
+    const { deploymentId } = req.params;
+
+    // Validate deploymentId format if needed
+    if (!deploymentId || typeof deploymentId !== 'string') {
+      return res.status(400).json({
+        status: 'error',
+        code: 'INVALID_DEPLOYMENT_ID',
+        message: 'Invalid deployment ID format'
       });
     }
-    
-    res.json({
+    // await checkCredentialsAndUpdateDeployment(deploymentId);
+
+    const deployment = await Deployment.findOne({ deploymentId })
+      .populate('nodeId', 'host name region status')
+      .lean(); // Convert to plain JS object
+
+    if (!deployment) {
+      return res.status(404).json({
+        status: 'error',
+        code: 'DEPLOYMENT_NOT_FOUND',
+        message: 'Deployment not found'
+      });
+    }
+
+    // Transform the response to include only necessary fields
+    const response = {
       status: 'success',
-      deployment
-    });
+      data: {
+        id: deployment.deploymentId,
+        name: deployment.deploymentName,
+        status: deployment.status,
+        type: deployment.deploymentType,
+        createdAt: deployment.createdAt,
+        updatedAt: deployment.updatedAt,
+        wpConfig: deployment.wpConfig ? {
+          url: deployment.wpConfig.url,
+          port: deployment.wpConfig.port,
+          adminUrl: deployment.wpConfig.adminUrl
+        } : null
+      }
+    };
+
+    // Set cache headers
+    res.set('Cache-Control', 'no-store');
+    
+    res.json(response);
+
   } catch (error) {
-    res.status(500).json({ 
-      status: 'error', 
-      message: error.message 
+    console.error(`Error fetching deployment ${req.params.deploymentId}:`, error);
+    
+    // Handle specific error types
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        status: 'error',
+        code: 'INVALID_ID_FORMAT',
+        message: 'Invalid deployment ID format'
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      code: 'SERVER_ERROR',
+      message: 'An unexpected error occurred',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
