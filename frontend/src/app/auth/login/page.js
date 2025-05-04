@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Spinner from '@/app/components/Spinner';
+import Spinner from '../../components/Spinner.js';
+
 
 // import Spinner from '@/components/Spinner'; // Make sure this path matches your project structure
 

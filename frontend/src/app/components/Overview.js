@@ -3,7 +3,7 @@
   import React, { useEffect, useState } from 'react'
   import { Users, Server, FileText, Globe, Wrench, ExternalLink, ArrowUpRight, Shield, BarChart3, Clock, HardDrive } from 'lucide-react'
   import axiosInstance from '@/utils/axiosInstance'
-  import Spinner from './Spinner'
+  import Spinner from "./Spinner.js"
 import Link from 'next/link'
 import DeploymentCard from './DeploymenCard'
 

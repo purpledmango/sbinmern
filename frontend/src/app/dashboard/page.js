@@ -5,7 +5,7 @@ import { Rocket, Home, PieChart, Users, Settings, Bell, ChevronDown, Menu, X, Cp
 import { motion, AnimatePresence } from 'framer-motion'
 import Overview from '../components/Overview'
 import { useRouter } from 'next/navigation'
-import axiosInstance from '@/utils/axiosInstance'
+import axiosInstance from '../../utils/axiosInstance.jss'
 import Image from 'next/image'
 import Instances from '../components/Instances'
 

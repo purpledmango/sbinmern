@@ -9,7 +9,7 @@ import {
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import axiosInstance from '@/utils/axiosInstance'
-import Spinner from './Spinner'
+import Spinner from "./Spinner.js"
 import DeploymentCard from './DeploymenCard'
 
 const Instances = ({ isDarkMode = false }) => {

@@ -4,7 +4,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook, FaSpinner } from 'react-icons/fa';
 import axiosInstance from '@/utils/axiosInstance';
 import { useRouter } from 'next/navigation';
-import Spinner from '@/app/components/Spinner';
+import Spinner from "../../components/Spinner.js"
 import toast from 'react-hot-toast';
 // List of Indian states for dropdown
 const INDIAN_STATES = [
