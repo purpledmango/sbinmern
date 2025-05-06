@@ -306,7 +306,7 @@ import DeploymentCard from './DeploymenCard'
                   </p>
                 </div>
               </div>
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 {[
                   {
                     id: 1,
@@ -316,22 +316,7 @@ import DeploymentCard from './DeploymenCard'
                     amount: '$1,250.00',
                     status: 'pending'
                   },
-                  {
-                    id: 2,
-                    number: 'INV-2023-044',
-                    client: 'Globex Inc',
-                    dueDate: 'yesterday',
-                    amount: '$3,420.50',
-                    status: 'overdue'
-                  },
-                  {
-                    id: 3,
-                    number: 'INV-2023-043',
-                    client: 'Contoso Ltd',
-                    dueDate: 'in 2 days',
-                    amount: '$890.00',
-                    status: 'pending'
-                  }
+                  
                 ].map(invoice => (
                   <div key={invoice.id} className={`flex justify-between items-center p-3 rounded-lg ${isDarkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-100'}`}>
                     <div>
@@ -356,7 +341,7 @@ import DeploymentCard from './DeploymenCard'
                     </div>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </div>
           </div>
           
