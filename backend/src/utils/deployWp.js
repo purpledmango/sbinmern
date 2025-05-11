@@ -25,9 +25,9 @@ export const deployWordPress = async (userId) => {
   try {
     // Establish the SSH connection
     await ssh.connect({
-      host: '150.241.246.228',
+      host: '160.187.69.17',
       username: 'root',
-      password: 'Utho@123@123',
+      password: '^^M@*891))-st@Gr@@b#er@10&**(!5',
       readyTimeout: 60000
     });
 
@@ -69,14 +69,15 @@ services:
     container_name: db_${userId}
     restart: unless-stopped
     volumes:
-      - ${basePath}/mysql:/var/lib/mysql
+      - mysql:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${mysqlRootPassword}
       MYSQL_DATABASE: wpdb
       MYSQL_USER: wpuser
       MYSQL_PASSWORD: ${dbPassword}
     command: --default-authentication-plugin=mysql_native_password
-`;
+volumes:
+  mysql:`;
 
     // Save Docker Compose file
     await ssh.execCommand(`cat > ${basePath}/docker-compose.yml << 'EOF'
@@ -86,7 +87,7 @@ EOF`);
     // Save credentials
     const credentialsContent = `
 WordPress Deployment Credentials:
-- WordPress URL: http://150.241.246.228:${wpPort}
+- WordPress URL: http://160.187.69.17:${wpPort}
 - WordPress Port: ${wpPort}
 - DB Name: wpdb
 - DB User: wpuser
@@ -100,6 +101,7 @@ EOF`);
     // Run Docker Compose
     console.log('Starting Docker containers...');
     await ssh.execCommand(`cd ${basePath} && docker-compose up -d`);
+    await ssh.execCommand(`ufw allow ${wpPort} && docker-compose up -d`);
 
     // Verify deployment
     await new Promise(resolve => setTimeout(resolve, 10000));
@@ -111,7 +113,7 @@ EOF`);
 
     return {
       success: true,
-      url: `http://150.241.246.228:${wpPort}`,
+      url: `http://160.187.69.17:${wpPort}`,
       port: wpPort,
       credentials: {
         dbName: 'wpdb',

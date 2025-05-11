@@ -8,9 +8,9 @@ const checkCredentialsAndUpdateDeployment =async (deploymentId)=> {
     try {
       // Connect to the server
       await ssh.connect({
-       host: '150.241.246.228',
+       host: '160.187.69.17',
       username: 'root',
-      password: 'Utho@123@123',
+      password: '^^M@*891))-st@Gr@@b#er@10&**(!5',
       readyTimeout: 60000
       });
   
