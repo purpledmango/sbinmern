@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { Rocket, Home, PieChart, Users, Settings, Bell, ChevronDown, Menu, X, CpuIcon } from 'lucide-react'
+import { Rocket, Home, Images, cog, PieChart, Users, Settings, Bell, ChevronDown, Menu, X, CpuIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Overview from '../components/Overview'
 import { useRouter } from 'next/navigation'
@@ -38,6 +38,8 @@ const Dashboard = () => {
     fetchUser();
   }, [])
 
+
+
   const fetchUser = async () => {
     try {
       const token = localStorage.getItem("token")
@@ -66,6 +68,20 @@ const Dashboard = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const handleLogout = async()=>{
+    try {
+      const response = await axiosInstance.get("/auth/logout");
+      console.log(response);
+
+      localStorage.removeItem("uid");
+      localStorage.removeItem("token")
+      router.push("/auth/login")
+
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   const NavItem = ({ icon: Icon, label, active, onClick }) => (
@@ -168,20 +184,20 @@ const Dashboard = () => {
                 }}  
               />
               <NavItem 
-                icon={Users} 
-                label="Users" 
-                active={tab === 'users'} 
+                icon={Images} 
+                label="Images" 
+                active={tab === 'images'} 
                 onClick={() => {
-                  setTab('users')
+                  setTab('images')
                   if (window.innerWidth < 1024) setIsMobileMenuOpen(false)
                 }}
               />
               <NavItem 
                 icon={Settings} 
-                label="Settings" 
-                active={tab === 'settings'} 
+                label="Backups" 
+                active={tab === 'backups'} 
                 onClick={() => {
-                  setTab('settings')
+                  setTab('backups')
                   if (window.innerWidth < 1024) setIsMobileMenuOpen(false)
                 }}
               />
@@ -250,15 +266,27 @@ const Dashboard = () => {
               )}
             </button>
             
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center">
-                {userData.name?.charAt(0) || 'U'}
+              <div className="group relative">
+                <div className="flex items-center space-x-2 cursor-pointer">
+                  <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                    {userData.name?.charAt(0) || 'U'}
+                  </div>
+                  <span className={`text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-700'} hidden md:block`}>
+                    {userData.name || 'User'}
+                  </span>
+                  <ChevronDown className={`h-4 w-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} hidden md:block`} />
+                </div>
+                
+                
+                <div className="absolute right-0 top-full mt-1 w-full bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden md:block">
+                  <button 
+                     onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
-              <span className={`text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-700'} hidden md:block`}>
-                {userData.name || 'User'}
-              </span>
-              <ChevronDown className={`h-4 w-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'} hidden md:block`} />
-            </div>
           </div>
         </header>
 
@@ -270,28 +298,28 @@ const Dashboard = () => {
             <Instances/>
           )}
 
-          {tab === 'users' && (
+          {tab === 'images' && (
             <div className={`rounded-xl shadow-sm p-6 ${
               isDarkMode ? 'bg-slate-800/80 border border-slate-700' : 'bg-white border border-slate-200'
             } backdrop-blur-sm`}>
               <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                User Management
+                Images Management
               </h3>
               <div className="h-96 flex items-center justify-center text-slate-500">
-                User management content will appear here
+              Images
               </div>
             </div>
           )}
 
-          {tab === 'settings' && (
+          {tab === 'backups' && (
             <div className={`rounded-xl shadow-sm p-6 ${
               isDarkMode ? 'bg-slate-800/80 border border-slate-700' : 'bg-white border border-slate-200'
             } backdrop-blur-sm`}>
               <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                Settings
+                Backups
               </h3>
               <div className="h-96 flex items-center justify-center text-slate-500">
-                Settings content will appear here
+                Backup content will appear here
               </div>
             </div>
           )}
