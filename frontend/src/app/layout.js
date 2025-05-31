@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "HostAstra.com - Cloud Tailored for your needs",
-  description: "Presenting HostAstra.com a solution for Wordpress and Manento handcrafed by ProfPresenting HostAstra.com: a solution for WordPress and Magento, handcrafted by professionals.",
+  description: "Presenting HostAstra.com: a solution for WordPress and Magento, handcrafted by professionals.",
 };
 
 export default function RootLayout({ children }) {
@@ -22,6 +23,20 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-DT3YVQTLH9"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-LQF6T9WGKB');
+          `}
+        </Script>
+        
         {children}
       </body>
     </html>

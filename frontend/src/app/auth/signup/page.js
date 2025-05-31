@@ -244,17 +244,17 @@ const SignUp = () => {
         </form>
 
         {/* Divider */}
-        <div className="relative my-6">
+        {/* <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
             <span className="bg-white px-2 text-gray-500">Or continue with</span>
           </div>
-        </div>
+        </div> */}
         
         {/* Social Sign Up Options */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50"
@@ -269,7 +269,7 @@ const SignUp = () => {
             <FaFacebook className="h-5 w-5 mr-2 text-blue-600" />
             Facebook
           </button>
-        </div>
+        </div> */}
 
         {/* Already have an account section */}
         <div className="text-center mt-4">

@@ -32,18 +32,15 @@ import DeploymentCard from './DeploymenCard'
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
+        const uid = localStorage.getItem("uid");
         
         // Add cache-busting and ensure fresh data
-        const response = await axiosInstance.get("/deploy", {
+        const response = await axiosInstance.get(`/deploy/user/${uid}`, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
-          params: {
-            _: Date.now() // Cache buster
-          }
-        });
+  
+          
+        }});
     
         console.log("Deployment data:", response.data);
         
@@ -58,8 +55,8 @@ import DeploymentCard from './DeploymenCard'
         }));
         
         // Set deployments from response if available
-        if (response.data.deployments && Array.isArray(response.data.deployments)) {
-          setDeployments(response.data.deployments);
+        if (response.data.data && Array.isArray(response.data.data)) {
+          setDeployments(response.data.data);
         }
       } catch (error) {
         console.error("Failed to fetch deployments:", error);
@@ -204,7 +201,7 @@ import DeploymentCard from './DeploymenCard'
             </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-col gap-6">
             {deployments.slice(0, 3).map((deployment, index) => (
               <DeploymentCard key={index} deployment={deployment} isDarkMode={isDarkMode} />
             ))}

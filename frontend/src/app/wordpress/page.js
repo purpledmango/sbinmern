@@ -3,6 +3,9 @@ import Image from 'next/image';
 import Footer from '../components/Footer';
 import Nav from '../components/Nav';
 import CTA from '../components/CTA';
+import PricingSection from '../components/PricingSection';
+import Link from 'next/link';
+import { FaWordpressSimple } from 'react-icons/fa';
 
 export const metadata = {
   title: "Hostastra - Dedicated WordPress Hosting",
@@ -131,63 +134,65 @@ export default function WordPressPage() {
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800">
+    <div className="min-h-screen bg-white text-slate-800">
       <Nav />
 
       {/* Hero Section with Logo */}
-      <div className="relative py-16 sm:py-24 lg:py-32 overflow-hidden">
+      <div className="relative py-20 lg:py-32 bg-gradient-to-br from-slate-50 via-white to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-center">
+          <div className="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
               {/* Logo */}
-              <div className="flex items-center justify-center lg:justify-start mb-6">
-                <div className="bg-indigo-600 p-3 rounded-lg shadow-lg">
-                  <Globe className="h-10 w-10 text-white" />
+              <div className="flex items-center justify-center lg:justify-start mb-8">
+                <div className="bg-indigo-600 p-3 rounded-xl shadow-lg">
+                  <FaWordpressSimple className="h-8 w-8 text-white" />
                 </div>
                 <span className="ml-3 text-2xl font-bold text-indigo-600">Hostastra</span>
               </div>
               
-              <h1 className="text-4xl tracking-tight font-extrabold sm:text-5xl xl:text-6xl">
-                <span className="block">Dedicated WordPress</span>
+              <h1 className="text-4xl tracking-tight font-bold sm:text-5xl xl:text-6xl leading-tight">
+                <span className="block text-slate-900">Dedicated WordPress</span>
                 <span className="block text-indigo-600">Hosting</span>
               </h1>
-              <p className="mt-3 text-lg text-slate-500">
+              <p className="mt-6 text-xl text-slate-600 leading-relaxed">
                 Built for Bloggers, Business Owners & Developers who are tired of shared hosting.
                 Experience WordPress hosting that's dedicated, not shared.
               </p>
-              <div className="mt-8 sm:max-w-lg sm:mx-auto lg:mx-0">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <a href="#" className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-300 hover:scale-105">
+              <div className="mt-10">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Link href="/auth/login" className="flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 shadow-lg hover:shadow-xl">
                     <Rocket className="h-5 w-5 mr-2" />
                     Launch in 10 Seconds
-                  </a>
-                  <a href="#plans" className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-all duration-300 hover:scale-105">
+                  </Link>
+                  <a href="#plans" className="flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors duration-200">
                     <Server className="h-5 w-5 mr-2" />
                     View Plans
                   </a>
                 </div>
-                <p className="mt-3 text-xs text-slate-500">
+                <p className="mt-4 text-sm text-slate-500">
                   All plans include free SSL, automated backups, and dedicated resources
                 </p>
               </div>
             </div>
-            <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:col-span-6">
-              <div className="relative mx-auto w-full rounded-xl shadow-xl overflow-hidden">
-                <Image
-                  src="/images/wordpress-logo.png"
-                  alt="WordPress on Hostastra"
-                  width={600}
-                  height={400}
-                  className="w-full"
-                />
-              </div>
-              
-              {/* Floating badges */}
-              <div className="absolute -top-4 -right-4 bg-green-500 text-white rounded-full px-3 py-1 text-sm font-bold shadow-lg">
-                1-Month Free Trial
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-blue-500 text-white rounded-full px-3 py-1 text-sm font-bold shadow-lg">
-                10-Second Setup
+            <div className="mt-16 lg:mt-0 lg:col-span-6">
+              <div className="relative">
+                <div className="relative mx-auto w-full rounded-2xl shadow-2xl overflow-hidden bg-white p-8">
+                  <Image
+                    src="/images/wordpress-logo.png"
+                    alt="WordPress on Hostastra"
+                    width={600}
+                    height={400}
+                    className="w-full rounded-lg"
+                  />
+                </div>
+                
+                {/* Floating badges */}
+                <div className="absolute -top-4 -right-4 bg-emerald-500 text-white rounded-full px-4 py-2 text-sm font-semibold shadow-lg">
+                  1-Month Free Trial
+                </div>
+                <div className="absolute -bottom-4 -left-4 bg-blue-500 text-white rounded-full px-4 py-2 text-sm font-semibold shadow-lg">
+                  10-Second Setup
+                </div>
               </div>
             </div>
           </div>
@@ -195,160 +200,153 @@ export default function WordPressPage() {
       </div>
 
       {/* User Type Selection */}
-      <div className="py-16 bg-white">
+      <div className="py-20 bg-slate-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-sm font-medium text-indigo-600 uppercase tracking-wider">Find Your Perfect Plan</h2>
-            <h3 className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-4">Find Your Perfect Plan</h2>
+            <h3 className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Which Best Describes You?
             </h3>
           </div>
           
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Blogger */}
-            <div className="hover:shadow-xl transition-all duration-300 bg-white rounded-lg border border-gray-100 shadow-sm p-6">
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600">
+            <div className="group hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl border border-slate-200 p-8">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600">
                   <User className="h-6 w-6" />
                 </div>
-                <h3 className="ml-3 text-xl font-semibold text-gray-900">I'm a Blogger</h3>
+                <h3 className="ml-4 text-xl font-semibold text-slate-900">I'm a Blogger</h3>
               </div>
-              <p className="text-gray-700 mb-4">You focus on writing, we handle the tech.</p>
-              <ul className="space-y-3 mb-6">
+              <p className="text-slate-600 mb-6">You focus on writing, we handle the tech.</p>
+              <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>1-click WordPress setup</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">1-click WordPress setup</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Free SSL & Daily Backups</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Free SSL & Daily Backups</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Blazing-fast page speed</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Blazing-fast page speed</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>No plugins needed for security or cache</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">No plugins needed for security or cache</span>
                 </li>
               </ul>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="font-medium text-blue-700">Suggested Plan: WordPress Lite</p>
-                <p className="text-sm text-blue-600">₹799/mo</p>
-                <p className="text-xs text-gray-600 mt-1">For personal blogs and portfolio sites</p>
-                <p className="text-xs text-gray-600 mt-1">1 vCPU | 1 GB RAM | 30 GB SSD | Daily Backup | SSL Included</p>
+              <div className="bg-blue-50 p-6 rounded-xl">
+                <p className="font-semibold text-blue-900 mb-1">WordPress Lite</p>
+                <p className="text-2xl font-bold text-blue-700 mb-2">₹499/mo</p>
+                <p className="text-sm text-slate-600 mb-2">For personal blogs and portfolio sites</p>
+                <p className="text-xs text-slate-500">1 vCPU | 1 GB RAM | 10 GB SSD | Daily Backup | SSL Included</p>
               </div>
             </div>
             
             {/* Business Owner */}
-            <div className="hover:shadow-xl transition-all duration-300 bg-white rounded-lg border border-gray-100 shadow-md p-6 transform scale-105">
-              <div className="absolute -top-3 right-4 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full">Popular</div>
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 text-indigo-600">
+            <div className="relative group hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl border-2 border-indigo-200 p-8 transform scale-105">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-full">
+                Most Popular
+              </div>
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600">
                   <Briefcase className="h-6 w-6" />
                 </div>
-                <h3 className="ml-3 text-xl font-semibold text-gray-900">I Run a Business Site</h3>
+                <h3 className="ml-4 text-xl font-semibold text-slate-900">I Run a Business Site</h3>
               </div>
-              <p className="text-gray-700 mb-4">Built to keep your website fast, secure, and running 24/7.</p>
-              <ul className="space-y-3 mb-6">
+              <p className="text-slate-600 mb-6">Built to keep your website fast, secure, and running 24/7.</p>
+              <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Dedicated resources for stability</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Dedicated resources for stability</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Automated backups & built-in security</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Automated backups & built-in security</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Supports contact forms, landing pages</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Supports contact forms, landing pages</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Integrations with popular business tools</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Integrations with popular business tools</span>
                 </li>
               </ul>
-              <div className="bg-indigo-50 p-4 rounded-lg">
-                <p className="font-medium text-indigo-700">Suggested Plan: WordPress Pro</p>
-                <p className="text-sm text-indigo-600">₹1299/mo</p>
-                <p className="text-xs text-gray-600 mt-1">For business websites and lead-gen landing pages</p>
-                <p className="text-xs text-gray-600 mt-1">1 vCPU | 2 GB RAM | 50 GB SSD | Priority Support | Daily Backups</p>
+              <div className="bg-indigo-50 p-6 rounded-xl">
+                <p className="font-semibold text-indigo-900 mb-1">WordPress Pro</p>
+                <p className="text-2xl font-bold text-indigo-700 mb-2">₹999/mo</p>
+                <p className="text-sm text-slate-600 mb-2">For business websites and lead-gen landing pages</p>
+                <p className="text-xs text-slate-500">1 vCPU | 2 GB RAM | 50 GB SSD | Priority Support | Daily Backups</p>
               </div>
             </div>
             
             {/* Developer */}
-            <div className="hover:shadow-xl transition-all duration-300 bg-white rounded-lg border border-gray-100 shadow-sm p-6">
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 text-purple-600">
+            <div className="group hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl border border-slate-200 p-8">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-purple-100 text-purple-600">
                   <Code className="h-6 w-6" />
                 </div>
-                <h3 className="ml-3 text-xl font-semibold text-gray-900">I'm a Web Developer/Agency</h3>
+                <h3 className="ml-4 text-xl font-semibold text-slate-900">I'm a Web Developer/Agency</h3>
               </div>
-              <p className="text-gray-700 mb-4">Run multiple client sites effortlessly with high performance.</p>
-              <ul className="space-y-3 mb-6">
+              <p className="text-slate-600 mb-6">Run multiple client sites effortlessly with high performance.</p>
+              <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Host multiple WordPress sites</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Host multiple WordPress sites</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>High-performance stack with full root access</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">High-performance stack with full root access</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Priority support & custom configs</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Priority support & custom configs</span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Optimized for developer workflows</span>
+                  <Check className="h-5 w-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" />
+                  <span className="text-slate-700">Optimized for developer workflows</span>
                 </li>
               </ul>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <p className="font-medium text-purple-700">Suggested Plan: WordPress Pro+</p>
-                <p className="text-sm text-purple-600">₹1999/mo</p>
-                <p className="text-xs text-gray-600 mt-1">For developers & growing agencies</p>
-                <p className="text-xs text-gray-600 mt-1">2 vCPU | 4 GB RAM | 100 GB SSD | Host up to 5 Sites | Enhanced Security</p>
+              <div className="bg-purple-50 p-6 rounded-xl">
+                <p className="font-semibold text-purple-900 mb-1">WordPress Pro+</p>
+                <p className="text-2xl font-bold text-purple-700 mb-2">₹1499/mo</p>
+                <p className="text-sm text-slate-600 mb-2">For developers & growing agencies</p>
+                <p className="text-xs text-slate-500">2 vCPU | 8 GB RAM | 80 GB SSD Enhanced Security</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Problem/Solution Section */}
-      <div className="py-24 bg-slate-50">
+      {/* Problem Section */}
+      <div className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center justify-center p-2 bg-indigo-50 rounded-full mb-6">
-              <Cloud className="h-6 w-6 text-indigo-600" />
+            <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-2xl mb-6">
+              <Zap className="h-8 w-8 text-indigo-600" />
             </div>
-            
-            <h2 className="text-sm font-medium text-indigo-600 uppercase tracking-wider">WordPress Challenges</h2>
-            
-            <h3 className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
+            <h3 className="text-3xl font-bold text-slate-900 sm:text-4xl mb-4">
               Why Choose Hostastra for WordPress?
             </h3>
-            
-            <p className="mt-4 text-lg text-gray-600">
+            <p className="text-xl text-slate-600">
               Because you deserve WordPress hosting that's fast, secure, and easy — without relying on dozens of plugins or struggling with slow shared servers.
             </p>
           </div>
           
-          {/* Problem Cards */}
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {problems.map((problem, index) => (
-              <div
-                key={index}
-                className="hover:translate-y-1 transition-all duration-300"
-              >
-                <div className="h-full bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md p-6">
+              <div key={index} className="group">
+                <div className="h-full bg-slate-50 rounded-2xl border border-slate-200 hover:border-indigo-200 p-6 transition-all duration-300 hover:shadow-lg">
                   <div className="flex items-center mb-4">
-                    <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100 text-indigo-600">
-                      <Zap className="h-5 w-5" />
+                    <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-red-100 text-red-600">
+                      <span className="text-sm font-bold">×</span>
                     </div>
-                    <span className="ml-3 text-xs font-semibold text-indigo-600 uppercase tracking-wider">Problem {index + 1}</span>
+                    <span className="ml-3 text-sm font-semibold text-red-600 uppercase tracking-wider">Problem {index + 1}</span>
                   </div>
-                  <p className="text-gray-900 font-medium">
+                  <p className="text-slate-700 font-medium leading-relaxed">
                     {problem}
                   </p>
                 </div>
@@ -359,104 +357,34 @@ export default function WordPressPage() {
       </div>
 
       {/* Features Section */}
-      <div className="py-16 bg-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="lg:text-center">
-            <Monitor className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Hostastra Solution</h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+      <div className="py-20 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-2xl mb-6">
+              <Monitor className="h-8 w-8 text-indigo-600" />
+            </div>
+            <h2 className="text-sm text-indigo-600 font-semibold tracking-wide uppercase mb-4">Hostastra Solution</h2>
+            <p className="text-3xl font-bold text-slate-900 sm:text-4xl mb-4">
               Optimized WordPress Experience
             </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
               Everything you need for a fast, secure WordPress site
             </p>
           </div>
 
-          <div className="mt-10">
-            <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature, index) => (
-                <div 
-                  key={index} 
-                  className="text-center transform transition-all duration-500 hover:scale-105 hover:rotate-1"
-                >
-                  <div className="group relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl opacity-75 group-hover:opacity-100 blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-                    <div className="relative bg-white p-6 rounded-xl shadow-xl">
-                      <div className="flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white mx-auto group-hover:scale-110 transition-transform duration-300">
-                        <feature.icon className="h-6 w-6" />
-                      </div>
-                      <div className="mt-5">
-                        <h3 className="text-lg font-medium text-gray-900">{feature.title}</h3>
-                        <p className="mt-2 text-base text-gray-500">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </div>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature, index) => (
+              <div key={index} className="group">
+                <div className="h-full bg-white rounded-2xl border border-slate-200 p-8 transition-all duration-300 hover:shadow-xl hover:border-indigo-200">
+                  <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-indigo-600 text-white mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <feature.icon className="h-7 w-7" />
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Plans Section */}
-      <div id="plans" className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <Server className="h-10 w-10 text-indigo-600 mx-auto mb-4" />
-            <h2 className="text-sm text-indigo-600 font-semibold tracking-wide uppercase">Pricing Plans</h2>
-            <p className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
-              Choose Your WordPress Hosting Plan
-            </p>
-            <p className="mt-4 max-w-2xl text-lg text-gray-500 mx-auto">
-              Affordable, dedicated plans crafted for bloggers, business owners, and agencies — with all the essentials built in and no hidden surprises.
-            </p>
-          </div>
-          
-          <div className="mt-16 grid gap-8 lg:grid-cols-3">
-            {plans.map((plan, index) => (
-              <div 
-                key={index}
-                className={`bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 ${plan.recommended ? 'border-2 border-indigo-500 ring-2 ring-indigo-500 ring-opacity-50' : 'border border-gray-100'}`}
-              >
-                {plan.recommended && (
-                  <div className="bg-indigo-500 text-white text-center py-2 font-medium">
-                    Recommended
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-slate-900 mb-3">{feature.title}</h3>
+                    <p className="text-slate-600 leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
-                )}
-                <div className="p-8">
-                  <div className="flex items-center justify-center h-16 w-16 rounded-md bg-gradient-to-r from-blue-500 to-indigo-600 text-white mx-auto mb-6">
-                    <plan.icon className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-xl font-bold text-center text-gray-900">{plan.name}</h3>
-                  <p className="text-center text-sm text-gray-500 mb-6">
-                    {plan.bestFor}
-                  </p>
-                  <p className="text-center">
-                    <span className="text-4xl font-extrabold text-gray-900">{plan.price}</span>
-                  </p>
-                  <div className="mt-8">
-                    <ul className="space-y-4">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-start">
-                          <div className="flex-shrink-0">
-                            <Check className="h-5 w-5 text-green-500" />
-                          </div>
-                          <p className="ml-3 text-gray-700">{feature}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <div className="bg-gray-50 p-6">
-                  <a
-                    href="#"
-                    className={`block w-full py-3 px-4 rounded-md shadow text-center text-white font-medium ${plan.recommended ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-500 hover:bg-blue-600'} transition duration-300`}
-                  >
-                    Get Started
-                  </a>
-                  <p className="mt-3 text-xs text-center text-gray-500">Includes 1-month free trial</p>
                 </div>
               </div>
             ))}
@@ -464,30 +392,38 @@ export default function WordPressPage() {
         </div>
       </div>
 
+      {/* Plans Section */}
+      <div id="plans" className="py-20 bg-white">
+        <PricingSection/>
+      </div>
+
       {/* Testimonial Section */}
-      <div className="py-16 bg-white">
+      <div className="py-20 bg-slate-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <Star className="h-10 w-10 text-yellow-400 mx-auto mb-4" />
-            <h2 className="text-sm text-indigo-600 font-semibold tracking-wide uppercase">Testimonials</h2>
-            <p className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
+            <div className="flex justify-center mb-6">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-8 w-8 text-yellow-400 fill-current" />
+              ))}
+            </div>
+            <p className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Trusted by 100+ Bloggers & Business Owners
             </p>
           </div>
           
-          <div className="bg-indigo-50 rounded-2xl p-8 sm:p-10 shadow-lg">
-            <div className="text-xl italic text-gray-800">
+          <div className="bg-white rounded-2xl p-10 shadow-xl border border-slate-200">
+            <div className="text-2xl italic text-slate-700 leading-relaxed mb-8">
               "Hostastra took away all the headaches I had with plugins, speed, and backups. It just works, and it's fast!"
             </div>
-            <div className="mt-6 flex items-center">
+            <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <User className="h-6 w-6 text-indigo-600" />
+                <div className="h-14 w-14 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <User className="h-7 w-7 text-indigo-600" />
                 </div>
               </div>
               <div className="ml-4">
-                <div className="text-base font-medium text-gray-900">Himanshu</div>
-                <div className="text-sm text-gray-500">Food Blogger</div>
+                <div className="text-lg font-semibold text-slate-900">Himanshu</div>
+                <div className="text-slate-500">Food Blogger</div>
               </div>
             </div>
           </div>
@@ -495,25 +431,25 @@ export default function WordPressPage() {
       </div>
 
       {/* FAQs */}
-      <div className="py-24 bg-slate-50">
+      <div className="py-20 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
-            <h2 className="text-sm text-indigo-600 font-semibold tracking-wide uppercase">FAQ</h2>
-            <p className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
+            <h2 className="text-sm text-indigo-600 font-semibold tracking-wide uppercase mb-4">FAQ</h2>
+            <p className="text-3xl font-bold text-slate-900 sm:text-4xl">
               Still Thinking? We've Got Answers to What's On Your Mind.
             </p>
           </div>
           
-          <div className="grid gap-6 md:gap-8">
+          <div className="space-y-6">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-white shadow-sm rounded-lg p-6 hover:shadow-md transition-shadow duration-300">
-                <h3 className="text-lg font-medium text-gray-900 flex items-start">
-                  <span className="flex-shrink-0 h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
-                    <span className="text-sm font-medium text-indigo-600">{index + 1}</span>
+              <div key={index} className="bg-slate-50 rounded-2xl p-8 hover:shadow-lg transition-shadow duration-300">
+                <h3 className="text-xl font-semibold text-slate-900 flex items-start mb-4">
+                  <span className="flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
+                    <span className="text-sm font-semibold text-indigo-600">{index + 1}</span>
                   </span>
                   {faq.question}
                 </h3>
-                <p className="mt-4 text-base text-gray-500 pl-9">
+                <p className="text-slate-600 leading-relaxed pl-12">
                   {faq.answer}
                 </p>
               </div>
@@ -523,27 +459,29 @@ export default function WordPressPage() {
       </div>
 
       {/* Final CTA */}
-      <div className="py-16 bg-white">
+      <div className="py-20 bg-gradient-to-br from-indigo-50 to-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+          <h2 className="text-4xl font-bold text-slate-900 sm:text-5xl mb-6">
             Ready to Host Like a King?
           </h2>
-          <p className="mt-4 text-lg text-gray-500">
+          <p className="text-xl text-slate-600 leading-relaxed mb-10">
             Choose your plan and launch your WordPress site in 10 seconds.
             No plugin chaos. No tech drama. Just speed, security, and peace of mind.
           </p>
-          <div className="mt-8">
+          <div className="mb-6">
             <a
               href="#"
-              className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center justify-center px-10 py-5 text-lg font-semibold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 shadow-xl hover:shadow-2xl"
             >
-              <Rocket className="h-5 w-5 mr-2" />
+              <Rocket className="h-6 w-6 mr-3" />
               Launch My WordPress Site Now
             </a>
-            <p className="mt-3 text-sm text-gray-500">Includes 1-month free trial</p>
           </div>
+          <p className="text-sm text-slate-500">Includes 1-month free trial</p>
         </div>
       </div>
 
+      <Footer />
     </div>
-  )}
+  )
+}

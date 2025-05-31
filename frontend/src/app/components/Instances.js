@@ -11,97 +11,58 @@ import 'react-toastify/dist/ReactToastify.css'
 import axiosInstance from '@/utils/axiosInstance'
 import Spinner from "./Spinner.js"
 import DeploymentCard from './DeploymenCard'
+import CreateDeploymentModal from './CreateDeploymentModal'
 
 const Instances = ({ isDarkMode = false }) => {
   const [deployments, setDeployments] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeDeployments, setActiveDeployments] = useState(new Set())
   const [showModal, setShowModal] = useState(false)
-  const [newDeployment, setNewDeployment] = useState({
-    deploymentName: '',
-    deploymentType: 'wordpress'
-  })
-  const [deploymentLoading, setDeploymentLoading] = useState(false)
 
-  // Memoized fetch function with auto-refresh for active deployments
+  // Fetch deployments function
   const fetchDeployments = useCallback(async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axiosInstance.get("/deploy", {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { _: Date.now() }
+      const response = await axiosInstance.get('/deployments', {
+        headers: { Authorization: `Bearer ${token}` }
       })
+      setDeployments(response.data)
       
-      if (response.data.deployments) {
-        setDeployments(response.data.deployments)
-        
-        // Update active deployments set
-        setActiveDeployments(prev => {
-          const newSet = new Set(prev)
-          response.data.deployments.forEach(dep => {
-            if (['initiated', 'in-progress'].includes(dep.status)) {
-              newSet.add(dep.deploymentId)
-            } else {
-              newSet.delete(dep.deploymentId)
-            }
-          })
-          return newSet
-        })
-      }
+      // Update active deployments
+      const activeIds = new Set(
+        response.data
+          .filter(d => d.status === 'in-progress' || d.status === 'initiated')
+          .map(d => d.id)
+      )
+      setActiveDeployments(activeIds)
     } catch (error) {
-      console.error("Failed to fetch deployments:", error)
+      console.error('Failed to fetch deployments:', error)
       toast.error("Failed to fetch deployments", {
         theme: isDarkMode ? 'dark' : 'light'
       })
-      
-      if (error.response?.status === 401) {
-        localStorage.removeItem("token")
-        // router.push('/login')
-      }
     } finally {
       setLoading(false)
     }
   }, [isDarkMode])
 
+  // Initial fetch and auto-refresh for active deployments
   useEffect(() => {
     fetchDeployments()
     
-    // Set up polling for active deployments
-    const pollInterval = setInterval(fetchDeployments, 5000)
-    return () => clearInterval(pollInterval)
-  }, [fetchDeployments])
-
-  const handleCreateDeployment = async () => {
-    if (!newDeployment.deploymentName.trim()) {
-      toast.warning("Please enter a deployment name", {
-        theme: isDarkMode ? 'dark' : 'light'
-      })
-      return
-    }
+    const interval = setInterval(() => {
+      if (activeDeployments.size > 0) {
+        fetchDeployments()
+      }
+    }, 5000) // Refresh every 5 seconds if there are active deployments
     
-    try {
-      setDeploymentLoading(true)
-      const token = localStorage.getItem("token")
-      const response = await axiosInstance.post('/deploy', newDeployment, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      
-      toast.success("Deployment initiated successfully", {
-        theme: isDarkMode ? 'dark' : 'light'
-      })
-      
-      setShowModal(false)
-      setNewDeployment({ deploymentName: '', deploymentType: 'wordpress' })
-      setActiveDeployments(prev => new Set(prev).add(response.data.deploymentId))
-      await fetchDeployments()
-    } catch (error) {
-      toast.error(`Failed to create deployment: ${error.response?.data?.message || error.message}`, {
-        theme: isDarkMode ? 'dark' : 'light'
-      })
-      console.error(error)
-    } finally {
-      setDeploymentLoading(false)
-    }
+    return () => clearInterval(interval)
+  }, [fetchDeployments, activeDeployments.size])
+
+  const handleDeploymentCreated = async (deploymentData) => {
+    // Add the new deployment to active deployments
+    setActiveDeployments(prev => new Set(prev).add(deploymentData.deploymentId))
+    // Refresh the list
+    await fetchDeployments()
   }
 
   const getStatusColor = (status) => {
@@ -160,21 +121,66 @@ const Instances = ({ isDarkMode = false }) => {
 
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-          Deployment Instances
-        </h2>
+        <div>
+          <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+            Deployment Instances
+          </h2>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            Manage your WordPress and Magento deployments
+          </p>
+        </div>
         <button
           onClick={() => setShowModal(true)}
-          className={`flex items-center px-4 py-2 rounded-lg ${
+          className={`flex items-center px-4 py-2 rounded-lg shadow-sm ${
             isDarkMode
-              ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-              : 'bg-indigo-500 text-white hover:bg-indigo-600'
-          } transition-colors duration-200`}
+              ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/25'
+              : 'bg-indigo-500 text-white hover:bg-indigo-600 shadow-indigo-500/25'
+          } transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5`}
         >
           <Plus size={18} className="mr-2" />
           Create Deployment
         </button>
       </div>
+
+      {/* Stats Bar */}
+      {deployments.length > 0 && (
+        <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 rounded-lg ${
+          isDarkMode ? 'bg-slate-800/50 border border-slate-700' : 'bg-slate-50 border border-slate-200'
+        }`}>
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+              {deployments.length}
+            </div>
+            <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              Total Deployments
+            </div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold text-green-500`}>
+              {deployments.filter(d => d.status === 'completed').length}
+            </div>
+            <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              Active
+            </div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold text-amber-500`}>
+              {deployments.filter(d => d.status === 'in-progress' || d.status === 'initiated').length}
+            </div>
+            <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              In Progress
+            </div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold text-red-500`}>
+              {deployments.filter(d => d.status === 'failed').length}
+            </div>
+            <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              Failed
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Deployment List */}
       {loading ? (
@@ -182,166 +188,55 @@ const Instances = ({ isDarkMode = false }) => {
           <Spinner size="large" />
         </div>
       ) : deployments.length === 0 ? (
-        <div className={`text-center py-16 rounded-xl border ${
-          isDarkMode ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'
+        <div className={`text-center py-16 rounded-xl border-2 border-dashed ${
+          isDarkMode ? 'border-slate-700 bg-slate-800/30' : 'border-slate-300 bg-slate-50/50'
         }`}>
-          <Server className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <Server className={`h-16 w-16 mx-auto mb-4 ${
+            isDarkMode ? 'text-slate-600' : 'text-slate-400'
+          }`} />
           <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
             No deployments found
           </h3>
+          <p className={`text-sm mb-6 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            Get started by creating your first deployment
+          </p>
           <button
             onClick={() => setShowModal(true)}
-            className={`inline-flex items-center px-4 py-2 rounded-lg ${
+            className={`inline-flex items-center px-6 py-3 rounded-lg shadow-sm ${
               isDarkMode
                 ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                 : 'bg-indigo-500 text-white hover:bg-indigo-600'
-            } transition-colors duration-200`}
+            } transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5`}
           >
             <Plus size={18} className="mr-2" />
-            Create Deployment
+            Create Your First Deployment
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {deployments.map((deployment, index) => (
-            <DeploymentCard key={index} deployment={deployment} isDarkMode={isDarkMode} />
-
+            <DeploymentCard 
+              key={deployment.id || index} 
+              deployment={deployment} 
+              isDarkMode={isDarkMode}
+              getStatusColor={getStatusColor}
+              getStatusText={getStatusText}
+              formatDate={formatDate}
+              getDeploymentIcon={getDeploymentIcon}
+            />
           ))}
         </div>
       )}
 
       {/* Create Deployment Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            <div 
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-              onClick={() => setShowModal(false)}
-            ></div>
-            
-            <div className={`relative rounded-xl ${
-              isDarkMode 
-                ? 'bg-slate-800 border border-slate-700' 
-                : 'bg-white border border-slate-200'
-            } p-6 w-full max-w-md`}>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                  Create New Deployment
-                </h3>
-                <button 
-                  onClick={() => setShowModal(false)}
-                  className={`p-1 rounded-full ${
-                    isDarkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-100 text-slate-500'
-                  }`}
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Deployment Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newDeployment.deploymentName}
-                    onChange={(e) => setNewDeployment({...newDeployment, deploymentName: e.target.value})}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      isDarkMode 
-                        ? 'bg-slate-700 border-slate-600 text-white' 
-                        : 'bg-white border-slate-300 text-slate-800'
-                    } focus:outline-none focus:ring-2 focus:ring-indigo-500/50`}
-                    placeholder="My New Website"
-                  />
-                </div>
-                
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Deployment Type
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div 
-                      className={`flex items-center p-3 rounded-lg cursor-pointer border-2 ${
-                        newDeployment.deploymentType === 'wordpress' 
-                          ? isDarkMode 
-                            ? 'border-indigo-500 bg-indigo-900/30' 
-                            : 'border-indigo-500 bg-indigo-50' 
-                          : isDarkMode 
-                            ? 'border-slate-700 bg-slate-800 hover:bg-slate-700/50' 
-                            : 'border-slate-200 bg-white hover:bg-slate-50'
-                      }`}
-                      onClick={() => setNewDeployment({...newDeployment, deploymentType: 'wordpress'})}
-                    >
-                      <Globe className={`h-5 w-5 mr-2 ${
-                        newDeployment.deploymentType === 'wordpress' 
-                          ? isDarkMode ? 'text-indigo-400' : 'text-indigo-600' 
-                          : isDarkMode ? 'text-slate-400' : 'text-slate-500'
-                      }`} />
-                      <span className={`text-sm font-medium ${
-                        newDeployment.deploymentType === 'wordpress' 
-                          ? isDarkMode ? 'text-indigo-300' : 'text-indigo-600' 
-                          : isDarkMode ? 'text-slate-300' : 'text-slate-700'
-                      }`}>
-                        WordPress
-                      </span>
-                    </div>
-                    
-                    <div className={`flex items-center p-3 rounded-lg cursor-not-allowed opacity-50 border-2 ${
-                      isDarkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-50'
-                    }`}>
-                      <ShoppingCart className={`h-5 w-5 mr-2 ${
-                        isDarkMode ? 'text-slate-400' : 'text-slate-500'
-                      }`} />
-                      <span className={`text-sm font-medium ${
-                        isDarkMode ? 'text-slate-400' : 'text-slate-500'
-                      }`}>
-                        Magento
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-3 mt-6">
-                <button 
-                  onClick={() => setShowModal(false)}
-                  className={`px-4 py-2 rounded-lg ${
-                    isDarkMode 
-                      ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' 
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  } transition-colors`}
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleCreateDeployment}
-                  disabled={deploymentLoading}
-                  className={`px-4 py-2 rounded-lg flex items-center ${
-                    isDarkMode
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                      : 'bg-indigo-500 text-white hover:bg-indigo-600'
-                  } transition-colors ${deploymentLoading ? 'opacity-75' : ''}`}
-                >
-                  {deploymentLoading ? (
-                    <>
-                      <Loader className="animate-spin mr-2 h-4 w-4" />
-                      Deploying...
-                    </>
-                  ) : (
-                    <>
-                      <Server className="mr-2 h-4 w-4" />
-                      Deploy
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateDeploymentModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        isDarkMode={isDarkMode}
+        onDeploymentCreated={handleDeploymentCreated}
+      />
     </div>
   )
 }
 
-export default Instances 
+export default Instances
