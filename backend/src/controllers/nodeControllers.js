@@ -201,6 +201,8 @@ export const getNodeById = async (req, res) => {
 export const updateNode = async (req, res) => {
   const { nid } = req.params;
   const updateData = { ...req.body };
+  
+  console.log("Req user", req)
 
   try {
     // Find the existing node first
@@ -211,27 +213,10 @@ export const updateNode = async (req, res) => {
       });
     }
 
-    // Handle credential updates securely
-    if (updateData.credentials) {
-      // Only encrypt if new credentials are provided
-      if (updateData.credentials.password) {
-        updateData.credentials.password = await bcrypt.hash(
-          updateData.credentials.password, 
-          SALT_ROUNDS
-        );
-      }
-      
-      if (updateData.credentials.passphrase) {
-        updateData.credentials.passphrase = await bcrypt.hash(
-          updateData.credentials.passphrase, 
-          SALT_ROUNDS
-        );
-      }
-    }
-
     // Update the node
     const updatedNode = await NodeModel.findOneAndUpdate(
       { nid },
+  
       updateData,
       { new: true, runValidators: true, select: '-credentials.password -credentials.passphrase' }
     );

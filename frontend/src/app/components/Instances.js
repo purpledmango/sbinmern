@@ -1,10 +1,8 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { 
-  Globe, Server, Calendar, Plus, X, 
-  ShoppingCart, Wrench, ArrowUpRight, Loader,
-  CheckCircle2, AlertCircle
+import {
+  Globe, Server, Plus, ShoppingCart
 } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -16,52 +14,30 @@ import CreateDeploymentModal from './CreateDeploymentModal'
 const Instances = ({ isDarkMode = false }) => {
   const [deployments, setDeployments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [activeDeployments, setActiveDeployments] = useState(new Set())
   const [showModal, setShowModal] = useState(false)
 
-  // Fetch deployments function
   const fetchDeployments = useCallback(async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axiosInstance.get('/deployments', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setDeployments(response.data)
-      
-      // Update active deployments
-      const activeIds = new Set(
-        response.data
-          .filter(d => d.status === 'in-progress' || d.status === 'initiated')
-          .map(d => d.id)
+      const uid = localStorage.getItem("uid")
+      const response = await axiosInstance.get(
+        `/deploy/user/${uid}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       )
-      setActiveDeployments(activeIds)
+      setDeployments(response.data.data)
     } catch (error) {
       console.error('Failed to fetch deployments:', error)
-      toast.error("Failed to fetch deployments", {
-        theme: isDarkMode ? 'dark' : 'light'
-      })
+      toast.error('Failed to fetch deployments')
     } finally {
       setLoading(false)
     }
-  }, [isDarkMode])
+  }, [])
 
-  // Initial fetch and auto-refresh for active deployments
   useEffect(() => {
     fetchDeployments()
-    
-    const interval = setInterval(() => {
-      if (activeDeployments.size > 0) {
-        fetchDeployments()
-      }
-    }, 5000) // Refresh every 5 seconds if there are active deployments
-    
-    return () => clearInterval(interval)
-  }, [fetchDeployments, activeDeployments.size])
+  }, [fetchDeployments])
 
-  const handleDeploymentCreated = async (deploymentData) => {
-    // Add the new deployment to active deployments
-    setActiveDeployments(prev => new Set(prev).add(deploymentData.deploymentId))
-    // Refresh the list
+  const handleDeploymentCreated = async () => {
     await fetchDeployments()
   }
 
@@ -88,20 +64,28 @@ const Instances = ({ isDarkMode = false }) => {
   }
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     })
   }
 
   const getDeploymentIcon = (type) => {
+    const iconClass = `h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`
     switch (type?.toLowerCase()) {
-      case 'wordpress': return <Globe className={`h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+      case 'wordpress': return <Globe className={iconClass} />
       case 'magento': return <ShoppingCart className={`h-5 w-5 ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`} />
       default: return <Server className={`h-5 w-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Spinner size="large" />
+      </div>
+    )
   }
 
   return (
@@ -109,13 +93,6 @@ const Instances = ({ isDarkMode = false }) => {
       <ToastContainer
         position="top-right"
         autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
         theme={isDarkMode ? 'dark' : 'light'}
       />
 
@@ -131,32 +108,32 @@ const Instances = ({ isDarkMode = false }) => {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className={`flex items-center px-4 py-2 rounded-lg shadow-sm ${
+          className={`flex items-center px-4 py-2 rounded-lg ${
             isDarkMode
-              ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/25'
-              : 'bg-indigo-500 text-white hover:bg-indigo-600 shadow-indigo-500/25'
-          } transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5`}
+              ? 'bg-indigo-600 hover:bg-indigo-700'
+              : 'bg-indigo-500 hover:bg-indigo-600'
+          } text-white transition-colors`}
         >
           <Plus size={18} className="mr-2" />
           Create Deployment
         </button>
       </div>
 
-      {/* Stats Bar */}
+      {/* Stats */}
       {deployments.length > 0 && (
-        <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 rounded-lg ${
-          isDarkMode ? 'bg-slate-800/50 border border-slate-700' : 'bg-slate-50 border border-slate-200'
+        <div className={`grid grid-cols-4 gap-4 mb-6 p-4 rounded-lg ${
+          isDarkMode ? 'bg-slate-800/50' : 'bg-slate-50'
         }`}>
           <div className="text-center">
             <div className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
               {deployments.length}
             </div>
             <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Total Deployments
+              Total
             </div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold text-green-500`}>
+            <div className="text-2xl font-bold text-green-500">
               {deployments.filter(d => d.status === 'completed').length}
             </div>
             <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -164,15 +141,15 @@ const Instances = ({ isDarkMode = false }) => {
             </div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold text-amber-500`}>
-              {deployments.filter(d => d.status === 'in-progress' || d.status === 'initiated').length}
+            <div className="text-2xl font-bold text-amber-500">
+              {deployments.filter(d => ['in-progress', 'initiated'].includes(d.status)).length}
             </div>
             <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
               In Progress
             </div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold text-red-500`}>
+            <div className="text-2xl font-bold text-red-500">
               {deployments.filter(d => d.status === 'failed').length}
             </div>
             <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -182,12 +159,8 @@ const Instances = ({ isDarkMode = false }) => {
         </div>
       )}
 
-      {/* Deployment List */}
-      {loading ? (
-        <div className="flex justify-center items-center py-20">
-          <Spinner size="large" />
-        </div>
-      ) : deployments.length === 0 ? (
+      {/* Content */}
+      {deployments.length === 0 ? (
         <div className={`text-center py-16 rounded-xl border-2 border-dashed ${
           isDarkMode ? 'border-slate-700 bg-slate-800/30' : 'border-slate-300 bg-slate-50/50'
         }`}>
@@ -202,11 +175,11 @@ const Instances = ({ isDarkMode = false }) => {
           </p>
           <button
             onClick={() => setShowModal(true)}
-            className={`inline-flex items-center px-6 py-3 rounded-lg shadow-sm ${
+            className={`flex items-center px-6 py-3 rounded-lg ${
               isDarkMode
-                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                : 'bg-indigo-500 text-white hover:bg-indigo-600'
-            } transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5`}
+                ? 'bg-indigo-600 hover:bg-indigo-700'
+                : 'bg-indigo-500 hover:bg-indigo-600'
+            } text-white transition-colors`}
           >
             <Plus size={18} className="mr-2" />
             Create Your First Deployment
@@ -215,9 +188,9 @@ const Instances = ({ isDarkMode = false }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {deployments.map((deployment, index) => (
-            <DeploymentCard 
-              key={deployment.id || index} 
-              deployment={deployment} 
+            <DeploymentCard
+              key={deployment.id || index}
+              deployment={deployment}
               isDarkMode={isDarkMode}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
@@ -228,7 +201,6 @@ const Instances = ({ isDarkMode = false }) => {
         </div>
       )}
 
-      {/* Create Deployment Modal */}
       <CreateDeploymentModal
         showModal={showModal}
         setShowModal={setShowModal}

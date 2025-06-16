@@ -23,9 +23,6 @@ router.get('/all', getAllNodes);
 router.get('/:nid', getNodeById);
 router.patch('/update/:nid', updateNode);
 router.post('/test-connection', testConnection);
-// router.get('/:id', validate(idParamSchema), getNode);
-// router.put('/:id', validate(idParamSchema), validate(updateNodeSchema), updateNode);
-// router.delete('/:id', validate(idParamSchema), deleteNode);
 
 // Server Operations Routes with validation
 // router.get('/:id/ssh-check', validate(checkSSHConnectionSchema), checkSSHConnection);

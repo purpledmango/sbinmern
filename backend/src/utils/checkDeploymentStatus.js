@@ -1,18 +1,21 @@
 import { NodeSSH } from 'node-ssh';
-import Deployment from '../models/deploymentModel.js';
+
+import NodeModel from '../models/infraModel.js';
 
 
 const checkCredentialsAndUpdateDeployment =async (deploymentId)=> {
     const ssh = new NodeSSH();
     
     try {
+      const nodeMachine = await NodeModel.findOne({nid: "210Sj990"}).select('+credentials.password').exec();
       // Connect to the server
       await ssh.connect({
-       host: '160.187.69.17',
-      username: 'root',
-      password: '^^M@*891))-st@Gr@@b#er@10&**(!5',
+      host: nodeMachine.credentials.host,
+      username: nodeMachine.credentials.username || "root",
+      password: nodeMachine.credentials.password,
       readyTimeout: 60000
       });
+
   
       // Check if credentials file exists
       const filePath = `/root/deployments/${deploymentId}/credentials.txt`;

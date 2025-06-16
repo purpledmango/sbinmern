@@ -30,8 +30,9 @@ import {
 import { useState, useEffect } from "react";
 import axiosInstance from "@/utils/axiosInstance";
 import { FaWordpressSimple } from "react-icons/fa";
-
-const ManageDeployment = ({ deployment, isDarkMode = false, onClose }) => {
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+const ManageDeployment = ({ deployment, isDarkMode = false, onClose, metrics="NA" }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isLoading, setIsLoading] = useState(false);
   const [deploymentData, setDeploymentData] = useState(deployment);
@@ -76,9 +77,9 @@ const ManageDeployment = ({ deployment, isDarkMode = false, onClose }) => {
   }, []);
 
   const handleCopyUrl = async () => {
-    const url = deploymentData.wpUrl?.startsWith('http') 
-      ? deploymentData.wpUrl 
-      : `https://${deploymentData.wpUrl}`;
+    const url = deploymentData.wpConfig.url?.startsWith('http') 
+      ? deploymentData.wpConfig.url 
+      : `${deploymentData.wpConfig.url}`;
     
     try {
       await navigator.clipboard.writeText(url);
@@ -200,9 +201,88 @@ const ManageDeployment = ({ deployment, isDarkMode = false, onClose }) => {
     }
   };
 
+  const handleRestart = async () => {
+  try {
+    // 1. Show loading toast with custom blue color
+    const toastId = toast.loading("🔄 Restart Signal Sent", {
+      style: {
+        background: '#3B82F6',
+        color: '#FFFFFF',
+        border: '1px solid #2563EB'
+      }
+    });
+    
+    // 2. Get authentication token
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      throw new Error("Authentication token not found");
+    }
+    
+    // 3. Make API call to restart deployment
+    const response = await axiosInstance.post(
+      `/deploy/restart/${deployment.deploymentId}`,
+      {}, // Empty body if no data needed
+      {
+        headers: { 
+          Authorization: `Bearer ${token}` 
+        }
+      }
+    );
+    
+    // 4. Handle successful restart
+    if (response.data.success) {
+      toast.success("✅ Deployment restarted successfully", { 
+        id: toastId,
+        style: {
+          background: '#10B981',
+          color: '#FFFFFF',
+          border: '1px solid #059669'
+        }
+      });
+      
+      // 5. Refresh deployment status after a short delay
+      setTimeout(() => {
+        fetchDeploymentStatus();
+      }, 3000); // Wait 3 seconds before checking new status
+    } else {
+      throw new Error(response.data.message || "Failed to restart deployment");
+    }
+  } catch (error) {
+    console.error("Restart error:", error);
+    
+    // Handle different types of errors
+    let errorMessage = "Failed to restart deployment";
+    
+    if (error.response) {
+      // Server responded with error status
+      errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
+    } else if (error.request) {
+      // Request was made but no response received
+      errorMessage = "Network error: Please check your connection";
+    } else {
+      // Something else happened
+      errorMessage = error.message || errorMessage;
+    }
+    
+    toast.error(`❌ ${errorMessage}`, {
+      style: {
+        background: '#EF4444',
+        color: '#FFFFFF',
+        border: '1px solid #DC2626'
+      }
+    });
+  }
+};
   const renderOverviewTab = () => (
     <div className="space-y-6">
       {/* Deployment Status */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        theme={isDarkMode ? 'dark' : 'light'}
+      />
+
       <div className={`
         p-6 rounded-xl border
         ${isDarkMode 
@@ -227,7 +307,7 @@ const ManageDeployment = ({ deployment, isDarkMode = false, onClose }) => {
           </div>
           <div className="text-center">
             <div className={`text-2xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-              {deploymentData.uptime || '99.9%'}
+              {metrics.uptime || '99.9%'}
             </div>
             <div className={`text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
               Uptime
@@ -305,6 +385,7 @@ const ManageDeployment = ({ deployment, isDarkMode = false, onClose }) => {
                 : 'bg-white hover:bg-slate-50 text-slate-700 border'
               }
             `}
+            onClick={handleRestart}
           >
             <RefreshCw className="h-4 w-4" />
             Restart

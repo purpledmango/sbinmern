@@ -127,6 +127,7 @@ export const loginController = async (req, res) => {
 };
 export const logoutController = (req, res) => {
   try {
+    req.user = null
     return res.status(200).json({ success: true, message: "User logged out" });
   } catch (e) {
     return res.status(500).json({ message: "Server Error", error: e });

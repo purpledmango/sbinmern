@@ -2,7 +2,9 @@ import { ArrowUpRight, Clock, Settings, Loader2, CheckCircle, XCircle, AlertCirc
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import axiosInstance from "@/utils/axiosInstance";
-import ManageDeployment from "./ManageDeployment"; // Import the ManageDeployment component
+import ManageDeployment from "./ManageDeployment";
+import { parseDockerMetrics } from "@/utils/parseMatrics.js";
+import Spinner from "@/app/components/Spinner.js";
 
 const DeploymentCard = ({ deployment, isDarkMode = false }) => {
   const [currentDeployment, setCurrentDeployment] = useState(deployment);
@@ -10,7 +12,9 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
   const [isLoading, setIsLoading] = useState(
     deployment.status !== 'completed' && deployment.status !== 'failed'
   );
-  const [showManageModal, setShowManageModal] = useState(false); // State to control modal visibility
+  const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [metrics, setMetrics] = useState(null);
+  const [showManageModal, setShowManageModal] = useState(false);
 
   // Premium color schemes
   const statusConfig = {
@@ -53,6 +57,11 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
   };
 
   useEffect(() => {
+    fetchMetrics();
+    
+  }, []);
+
+  useEffect(() => {
     if (isLoading) {
       const interval = setInterval(() => {
         fetchDeploymentStatus();
@@ -61,6 +70,7 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
     }
   }, [isLoading]);
 
+  
   const fetchDeploymentStatus = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -68,7 +78,7 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
         `/deploy/${deployment.deploymentId}`, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setCurrentDeployment(response.data.data);
+      setCurrentDeployment(response.data.data || "NA");
       
       if (response.data.data.status === 'completed' || response.data.data.status === 'failed') {
         setIsLoading(false);
@@ -81,14 +91,25 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
 
   const fetchMetrics = async () => {
     try {
+      setLoadingMetrics(true);
       const token = localStorage.getItem("token");
       const response = await axiosInstance.get(
         `/deploy/status/${deployment.deploymentId}`, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("Deployment Metrics", response);
+
+      console.log("Updated Metrics Data format", response.data.data.metrics);
+      
+      // Parse and set metrics here
+      if (response.data.data.metrics) {
+        setMetrics(response.data.data.metrics);
+      }
+      
     } catch (error) {
       console.error("Error fetching metrics:", error);
+      setMetrics(null);
+    } finally {
+      setLoadingMetrics(false);
     }
   };
 
@@ -117,13 +138,19 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
         {/* Header Section */}
         <div className="p-6 pb-4">
           <div className="flex items-start justify-between mb-4">
-            <div className="space-y-1">
-              <h3 className={`
-                text-lg font-semibold tracking-tight
-                ${isDarkMode ? 'text-white' : 'text-slate-900'}
-              `}>
-                {currentDeployment.deploymentName}
-              </h3>
+            <div className="space-y-1 w-full">
+              <div className="w-full flex justify-between items-center py-4 px-2">
+                <h3 className={`
+                  text-lg font-semibold tracking-tight
+                  ${isDarkMode ? 'text-white' : 'text-slate-900'}
+                `}>
+                  {currentDeployment.deploymentName}
+                </h3>
+                <span className="text-xs font-semibold">
+                  Created at: {new Date(currentDeployment.createdAt).toLocaleString()}
+                </span>              
+              </div>
+                      
               <div className="flex items-center gap-3">
                 {/* Status Badge */}
                 <div className={`
@@ -140,17 +167,18 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
                 
                 {/* Platform Badge */}
                 <div className={`
-                  px-2.5 py-1 rounded-full text-xs font-medium
+                  capitalize px-2.5 py-1 rounded-full text-xs font-medium
                   ${currentPlatform.color}
                 `}>
-                  {currentPlatform.label}
+                  {currentDeployment.deploymentType}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Metrics Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
+            {/* CPU */}
             <div className={`
               p-3 rounded-xl border
               ${isDarkMode 
@@ -162,16 +190,23 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
                 text-xs font-medium mb-1
                 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}
               `}>
-                Uptime
+                CPU
               </div>
               <div className={`
                 text-sm font-semibold
                 ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}
               `}>
-                {currentDeployment.uptime || '99.9%'}
+                {loadingMetrics ? (
+                  <Spinner size="small" />
+                ) : metrics?.cpu ? (
+                  metrics.cpu.cores
+                ) : (
+                  "N/A"
+                )}
               </div>
             </div>
-            
+
+            {/* RAM */}
             <div className={`
               p-3 rounded-xl border
               ${isDarkMode 
@@ -183,13 +218,47 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
                 text-xs font-medium mb-1
                 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}
               `}>
-                Visitors
+                RAM
               </div>
               <div className={`
                 text-sm font-semibold
                 ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}
               `}>
-                {currentDeployment.visitors || '1.2K'}
+                {loadingMetrics ? (
+                  <Spinner size="small" />
+                ) : metrics?.memory ? (
+                  metrics.memory.total
+                ) : (
+                  "N/A"
+                )}
+              </div>
+            </div>
+
+            {/* Memory Usage */}
+            <div className={`
+              p-3 rounded-xl border
+              ${isDarkMode 
+                ? 'bg-slate-800/30 border-slate-700/30' 
+                : 'bg-slate-50/50 border-slate-200/30'
+              }
+            `}>
+              <div className={`
+                text-xs font-medium mb-1
+                ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}
+              `}>
+                Memory Usage
+              </div>
+              <div className={`
+                text-sm font-semibold
+                ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}
+              `}>
+                {loadingMetrics ? (
+                  <Spinner size="small" />
+                ) : metrics?.memory ? (
+                  metrics.memory.percentage
+                ) : (
+                  "N/A"
+                )}
               </div>
             </div>
           </div>
@@ -270,10 +339,11 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
           deployment={currentDeployment}
           isDarkMode={isDarkMode}
           onClose={handleCloseManageModal}
+          metrics={metrics}
         />
       )}
     </>
   );
-};
+}; 
 
 export default DeploymentCard;

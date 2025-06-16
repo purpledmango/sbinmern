@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 
 const { Schema } = mongoose;
 
 const CredentialsSchema = new Schema({
   host: {
     type: String,
-    required: true,
+    // required: true,
     trim: true
   },
   port: {
@@ -17,17 +17,13 @@ const CredentialsSchema = new Schema({
   },
   username: {
     type: String,
-    required: true,
+    // required: true,
     trim: true
   },
   password: {
     type: String,
-    select: false,
-    set: function(password) {  // Removed async here since we're not awaiting
-      if (!password) return undefined;
-      const salt = bcrypt.genSaltSync(12);
-      return bcrypt.hashSync(password, salt);
-    }
+    trim: true,
+    select: false
   },
   privateKey: {
     type: String,
@@ -37,11 +33,7 @@ const CredentialsSchema = new Schema({
   passphrase: {
     type: String,
     select: false,
-    set: function(passphrase) {  // Removed async here
-      if (!passphrase) return undefined;
-      const salt = bcrypt.genSaltSync(12);
-      return bcrypt.hashSync(passphrase, salt);
-    }
+    trim: true
   }
 }, { _id: false });
 
@@ -49,7 +41,7 @@ const SshStatusSchema = new Schema({
   connected: {
     type: Boolean,
     required: true,
-    default: false  // Added default value
+    default: false
   },
   lastChecked: {
     type: Date,
@@ -59,7 +51,7 @@ const SshStatusSchema = new Schema({
     type: String,
     enum: ['password', 'privateKey', 'none'],
     required: true,
-    default: 'none'  // Added default value
+    default: 'none'
   },
   error: {
     type: String,
@@ -78,17 +70,11 @@ const NodeSchema = new Schema({
     type: String,
     required: true,
     unique: true,
-    default: () => uuidv4().split('-')[0], // Takes first 8 chars (first segment)
-    validate: {
-      validator: function(v) {
-        // Validate it's 8 hex characters
-        return /^[0-9a-f]{8}$/i.test(v);
-      },
-      message: props => `${props.value} is not a valid 8-character hex ID!`
-    }
+    default: () => uuidv4().slice(0,6),
+    
   },
   description: {
-    type: String,
+    type: String, 
     trim: true
   },
   credentials: {
@@ -134,12 +120,7 @@ const NodeSchema = new Schema({
   }
 });
 
-NodeSchema.methods.verifyCredentials = async function(password) {
-  if (this.credentials.password) {
-    return await bcrypt.compare(password, this.credentials.password);
-  }
-  return false;
-};
+// Removed verifyCredentials method since we're not using bcrypt anymore
 
 NodeSchema.pre('save', async function(next) {
   if (this.isModified('credentials') || !this.sshStatus.connected) {
@@ -179,7 +160,7 @@ NodeSchema.statics.verifySSHConnection = async function(credentials) {
   const connectionOptions = {
     host: credentials.host,
     port: credentials.port || 22,
-    username: credentials.username,
+    username: credentials.username || "root",
     readyTimeout: 8000,
     connectTimeout: 8000
   };

@@ -31,7 +31,7 @@ const deploymentSchema = new Schema({
   // Status Information
   status: {
     type: String,
-    enum: ['initiated', 'in-progress', 'completed', 'failed', 'rolled-back'],
+    enum: ['initiated', 'in-progress', 'completed', 'success', 'failed', 'rolled-back'],
     default: 'initiated'
   },
   // WordPress Configuration
