@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import {
-  Globe, Server, Plus, ShoppingCart
+  Globe, Server, Plus, ShoppingCart, Box, Zap, AlertTriangle, CheckCircle
 } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -15,9 +15,11 @@ const Instances = ({ isDarkMode = false }) => {
   const [deployments, setDeployments] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
 
   const fetchDeployments = useCallback(async () => {
     try {
+      setLoading(true)
       const token = localStorage.getItem("token")
       const uid = localStorage.getItem("uid")
       const response = await axiosInstance.get(
@@ -35,10 +37,28 @@ const Instances = ({ isDarkMode = false }) => {
 
   useEffect(() => {
     fetchDeployments()
-  }, [fetchDeployments])
+  }, [])
 
   const handleDeploymentCreated = async () => {
     await fetchDeployments()
+  }
+
+  const handleDeleteDeployment = async (deploymentId) => {
+    try {
+      setDeletingId(deploymentId)
+      const token = localStorage.getItem("token")
+      await axiosInstance.delete(
+        `/deploy/${deploymentId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      toast.success('Deployment deleted successfully')
+      setDeployments(prev => prev.filter(d => d.id !== deploymentId))
+    } catch (error) {
+      console.error('Failed to delete deployment:', error)
+      toast.error('Failed to delete deployment')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const getStatusColor = (status) => {
@@ -97,9 +117,9 @@ const Instances = ({ isDarkMode = false }) => {
       />
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+          <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             Deployment Instances
           </h2>
           <p className={`text-sm mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -108,51 +128,59 @@ const Instances = ({ isDarkMode = false }) => {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className={`flex items-center px-4 py-2 rounded-lg ${
-            isDarkMode
-              ? 'bg-indigo-600 hover:bg-indigo-700'
-              : 'bg-indigo-500 hover:bg-indigo-600'
-          } text-white transition-colors`}
+          className={`flex items-center px-4 py-2.5 rounded-lg gap-2 transition-all
+            ${isDarkMode
+              ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-900/50'
+              : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30'
+            } text-white shadow-sm hover:shadow-md`}
         >
-          <Plus size={18} className="mr-2" />
-          Create Deployment
+          <Plus size={18} />
+          <span>Create Deployment</span>
         </button>
       </div>
 
       {/* Stats */}
       {deployments.length > 0 && (
-        <div className={`grid grid-cols-4 gap-4 mb-6 p-4 rounded-lg ${
-          isDarkMode ? 'bg-slate-800/50' : 'bg-slate-50'
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 p-5 rounded-xl border ${
+          isDarkMode ? 'bg-slate-800/30 border-slate-700' : 'bg-white border-slate-200 shadow-sm'
         }`}>
-          <div className="text-center">
-            <div className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+          <div className={`p-3 rounded-lg text-center ${
+            isDarkMode ? 'bg-slate-700/50' : 'bg-slate-50'
+          }`}>
+            <div className={`text-3xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               {deployments.length}
             </div>
-            <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Total
+            <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              Total Deployments
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-500">
+          <div className={`p-3 rounded-lg text-center ${
+            isDarkMode ? 'bg-green-900/20' : 'bg-green-50'
+          }`}>
+            <div className="text-3xl font-bold text-green-500 mb-1">
               {deployments.filter(d => d.status === 'completed').length}
             </div>
-            <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
               Active
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-amber-500">
+          <div className={`p-3 rounded-lg text-center ${
+            isDarkMode ? 'bg-amber-900/20' : 'bg-amber-50'
+          }`}>
+            <div className="text-3xl font-bold text-amber-500 mb-1">
               {deployments.filter(d => ['in-progress', 'initiated'].includes(d.status)).length}
             </div>
-            <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>
               In Progress
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-500">
+          <div className={`p-3 rounded-lg text-center ${
+            isDarkMode ? 'bg-red-900/20' : 'bg-red-50'
+          }`}>
+            <div className="text-3xl font-bold text-red-500 mb-1">
               {deployments.filter(d => d.status === 'failed').length}
             </div>
-            <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
               Failed
             </div>
           </div>
@@ -161,13 +189,16 @@ const Instances = ({ isDarkMode = false }) => {
 
       {/* Content */}
       {deployments.length === 0 ? (
-        <div className={`text-center py-16 rounded-xl border-2 border-dashed ${
-          isDarkMode ? 'border-slate-700 bg-slate-800/30' : 'border-slate-300 bg-slate-50/50'
+        <div className={`text-center py-16 rounded-xl border-2 border-dashed transition-all ${
+          isDarkMode ? 'border-slate-700 bg-slate-800/30 hover:border-slate-600' 
+          : 'border-slate-300 bg-slate-50/50 hover:border-slate-400'
         }`}>
-          <Server className={`h-16 w-16 mx-auto mb-4 ${
-            isDarkMode ? 'text-slate-600' : 'text-slate-400'
-          }`} />
-          <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
+          <div className={`inline-flex items-center justify-center h-16 w-16 rounded-full mb-4 mx-auto ${
+            isDarkMode ? 'bg-slate-700/50 text-slate-500' : 'bg-slate-100 text-slate-400'
+          }`}>
+            <Box className="h-8 w-8" />
+          </div>
+          <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             No deployments found
           </h3>
           <p className={`text-sm mb-6 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -175,27 +206,29 @@ const Instances = ({ isDarkMode = false }) => {
           </p>
           <button
             onClick={() => setShowModal(true)}
-            className={`flex items-center px-6 py-3 rounded-lg ${
-              isDarkMode
-                ? 'bg-indigo-600 hover:bg-indigo-700'
-                : 'bg-indigo-500 hover:bg-indigo-600'
-            } text-white transition-colors`}
+            className={`flex items-center px-6 py-3 rounded-lg gap-2 mx-auto transition-all
+              ${isDarkMode
+                ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-900/50'
+                : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30'
+              } text-white shadow-sm hover:shadow-md`}
           >
-            <Plus size={18} className="mr-2" />
-            Create Your First Deployment
+            <Plus size={18} />
+            <span>Create Your First Deployment</span>
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {deployments.map((deployment, index) => (
+          {deployments.map((deployment) => (
             <DeploymentCard
-              key={deployment.id || index}
+              key={deployment.id}
               deployment={deployment}
               isDarkMode={isDarkMode}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
               formatDate={formatDate}
               getDeploymentIcon={getDeploymentIcon}
+              onDelete={handleDeleteDeployment}
+              isDeleting={deletingId === deployment.id}
             />
           ))}
         </div>

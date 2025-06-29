@@ -6,7 +6,7 @@ import ManageDeployment from "./ManageDeployment";
 import { parseDockerMetrics } from "@/utils/parseMatrics.js";
 import Spinner from "@/app/components/Spinner.js";
 
-const DeploymentCard = ({ deployment, isDarkMode = false }) => {
+const DeploymentCard = ({ deployment, isDarkMode = false , onDelete, isDeleting}) => {
   const [currentDeployment, setCurrentDeployment] = useState(deployment);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [isLoading, setIsLoading] = useState(
@@ -57,7 +57,9 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
   };
 
   useEffect(() => {
+    setLoadingStatus(true)
     fetchMetrics();
+
     
   }, []);
 
@@ -85,6 +87,7 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
       }
     } catch (error) {
       console.error("Error fetching deployment status:", error);
+
       setIsLoading(false);
     }
   };
@@ -107,9 +110,19 @@ const DeploymentCard = ({ deployment, isDarkMode = false }) => {
       
     } catch (error) {
       console.error("Error fetching metrics:", error);
-      setMetrics(null);
-    } finally {
+      setMetrics({
+        metrics: {
+          memory: {
+            total: "N/A",
+            percentage: "N/A" 
+      },
+    cpu: {
+      cores: "N/A"
+    }
+  }
+});    } finally {
       setLoadingMetrics(false);
+      setLoadingStatus(false)
     }
   };
 

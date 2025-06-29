@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   HardDrive, Server, Calendar, Plus, X, 
   Cpu, Network, ArrowUpRight, Loader,
@@ -10,9 +10,10 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import axiosInstance from "../../utils/axiosInstance.js"
 import Spinner from "./Spinner.js"
+import Link from 'next/link.js'
 
 const InfraManagement = ({ isDarkMode = false }) => {
-  const [machines, setMachines] = useState([])
+  const [machines, setMachines] = useState([]) // Changed from nodeData to machines for consistency
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [newMachine, setNewMachine] = useState({
@@ -26,36 +27,25 @@ const InfraManagement = ({ isDarkMode = false }) => {
   const [addingMachine, setAddingMachine] = useState(false)
 
   // Fetch machines data
-  const fetchMachines = useCallback(async () => {
+  const fetchNodeDetails = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
-      const response = await axiosInstance.get("/infra/all/", {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { _: Date.now() }
-      })
-      
-      if (response.data) {
-        setMachines(response.data.data)
-      }
+      const response = await axiosInstance.get('/infra/all')
+      setMachines(response.data.data || []) // Ensure we always have an array
+      setLoading(false)
     } catch (error) {
-      console.error("Failed to fetch machines:", error)
-      toast.error("Failed to fetch infrastructure data", {
+      console.error('Error fetching node details:', error)
+      toast.error(`Failed to fetch machines: ${error.message}`, {
         theme: isDarkMode ? 'dark' : 'light'
       })
-      
-      if (error.response?.status === 401) {
-        localStorage.removeItem("token")
-        // router.push('/login')
-      }
-    } finally {
+      setMachines([])
       setLoading(false)
     }
-  }, [isDarkMode])
+  }
 
   useEffect(() => {
-    fetchMachines();
-  }, [fetchMachines])
+    fetchNodeDetails();
+  }, [])
 
   const handleAddMachine = async () => {
     // Validate form
@@ -93,7 +83,7 @@ const InfraManagement = ({ isDarkMode = false }) => {
         memoryGB: 8,
         diskGB: 100
       })
-      await fetchMachines()
+      await fetchNodeDetails()
     } catch (error) {
       toast.error(`Failed to add machine: ${error.response?.data?.message || error.message}`, {
         theme: isDarkMode ? 'dark' : 'light'
@@ -115,12 +105,17 @@ const InfraManagement = ({ isDarkMode = false }) => {
   }
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    })
+    if (!dateString) return 'Unknown date'
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    } catch (e) {
+      return 'Invalid date'
+    }
   }
 
   const getMachineTypeIcon = (type) => {
@@ -133,22 +128,23 @@ const InfraManagement = ({ isDarkMode = false }) => {
   }
 
   const renderMachineCard = (machine) => {
-    const statusColor = getStatusColor(machine.status);
+    const statusColor = getStatusColor(machine.status)
     
     return (
       <div className={`rounded-xl overflow-hidden border shadow-sm ${
         isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
       }`}>
+          
         <div className="p-5">
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center">
               {getMachineTypeIcon(machine.machineType)}
               <h3 className={`ml-2 font-medium ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
-                {machine.machineName}
+                {machine.name || 'Unnamed Machine'}
               </h3>
             </div>
             <div className="flex items-center">
-              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusColor(machine.status)}`}></span>
+              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${statusColor}`}></span>
               <span className={`text-sm capitalize ${
                 machine.status === 'online' 
                   ? isDarkMode ? 'text-green-400' : 'text-green-600'
@@ -156,7 +152,7 @@ const InfraManagement = ({ isDarkMode = false }) => {
                   ? isDarkMode ? 'text-red-400' : 'text-red-600'
                   : isDarkMode ? 'text-amber-400' : 'text-amber-600'
               }`}>
-                {machine.status}
+                {machine.status || 'unknown'}
               </span>
             </div>
           </div>
@@ -165,21 +161,21 @@ const InfraManagement = ({ isDarkMode = false }) => {
             <div className="flex items-center text-sm">
               <Network className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
               <span className={isDarkMode ? 'text-slate-300' : 'text-slate-700'}>
-                {machine.ipAddress}
+                {machine.ipAddress || 'No IP'}
               </span>
             </div>
             
             <div className="flex items-center text-sm">
               <Cpu className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
               <span className={isDarkMode ? 'text-slate-300' : 'text-slate-700'}>
-                {machine.cpuCores} Cores, {machine.memoryGB} GB RAM
+                {machine.cpuCores || 0} Cores, {machine.memoryGB || 0} GB RAM
               </span>
             </div>
             
             <div className="flex items-center text-sm">
               <HardDrive className={`h-4 w-4 mr-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
               <span className={isDarkMode ? 'text-slate-300' : 'text-slate-700'}>
-                {machine.diskGB} GB Storage
+                {machine.diskGB || 0} GB Storage
               </span>
             </div>
             
@@ -265,7 +261,7 @@ const InfraManagement = ({ isDarkMode = false }) => {
           Add Machine
         </button>
       </div>
-
+        
       {/* Machine List */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
@@ -297,7 +293,7 @@ const InfraManagement = ({ isDarkMode = false }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {machines.map((machine, index) => (
-            <div key={index}>
+            <div key={machine._id || index}>
               {renderMachineCard(machine)}
             </div>
           ))}
@@ -541,6 +537,12 @@ const InfraManagement = ({ isDarkMode = false }) => {
           </div>
         </div>
       )}
+      <Link href={"/dashboard"} className={`flex items-center px-4 py-2 rounded-lg ${
+            isDarkMode
+              ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+              : 'bg-indigo-500 text-white hover:bg-indigo-600'
+          } transition-colors duration-200`}>Go   to Dashboard</Link>
+
     </div>
   )
 }

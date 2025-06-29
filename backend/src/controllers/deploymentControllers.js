@@ -183,7 +183,7 @@ export const deleteDeployment = async (req, res) => {
     await ssh.connect({
       host: '160.187.69.17',
       username: 'root',
-      password: '^^M@*891))-st@Gr@@b#er@10&**(!5',
+      password: '^^Mdaq09ei210kj@*891)dsada)-st@Gr@@b#er@10&**(!5',
       readyTimeout: 60000
     });
 

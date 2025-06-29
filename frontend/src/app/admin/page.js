@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import InfraManagement from '../components/InfraManagement'
+import axiosInstance from '@/utils/axiosInstance'
 
 const Page = () => {
   const [mounted, setMounted] = useState(false)
@@ -11,9 +12,24 @@ const Page = () => {
   useEffect(() => {
     setMounted(true)
   }, [])
-
+  const fetchNodeDetails = async () => {
+    try {
+      const response = await axiosInstance.get('/infra/all')
+      console.log("The response received so far", response.data)
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error fetching node details:', error)
+      return []
+    } 
+  }
   // Determine if dark mode is active
   const isDarkMode = 'dark'
+
+
 
   if (!mounted) {
     // Return a placeholder or skeleton during SSR to prevent hydration errors

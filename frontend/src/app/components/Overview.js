@@ -210,10 +210,10 @@ import DeploymentCard from './DeploymenCard'
 
         {/* Quick Stats */}
         <div className={`rounded-xl p-6 ${
-          isDarkMode 
-            ? 'bg-slate-800/80 border border-slate-700 shadow-lg shadow-slate-900/20' 
-            : 'bg-white/80 border border-slate-200 shadow-lg shadow-slate-200/20'
-        } backdrop-blur-sm`}>
+  isDarkMode 
+    ? 'bg-slate-800/80 border border-slate-700 shadow-lg shadow-slate-900/20' 
+    : 'bg-white/80 border border-slate-200 shadow-lg shadow-slate-200/20'
+} backdrop-blur-sm relative z-[100]`}> 
         
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Recent Backups Data */}
