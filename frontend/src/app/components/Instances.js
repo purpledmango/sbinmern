@@ -91,14 +91,7 @@ const Instances = ({ isDarkMode = false }) => {
     })
   }
 
-  const getDeploymentIcon = (type) => {
-    const iconClass = `h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`
-    switch (type?.toLowerCase()) {
-      case 'wordpress': return <Globe className={iconClass} />
-      case 'magento': return <ShoppingCart className={`h-5 w-5 ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`} />
-      default: return <Server className={`h-5 w-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-    }
-  }
+
 
   if (loading) {
     return (
@@ -226,7 +219,6 @@ const Instances = ({ isDarkMode = false }) => {
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
               formatDate={formatDate}
-              getDeploymentIcon={getDeploymentIcon}
               onDelete={handleDeleteDeployment}
               isDeleting={deletingId === deployment.id}
             />

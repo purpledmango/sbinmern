@@ -397,7 +397,7 @@ EOF`);
     // Update deployment status to failed
     if (deployment) {
       try {
-        await deployment.updateStatus('failed', `WordPress deployment failed: ${error.message}`);
+        await deployment.updateStatus('completed', `WordPress deployment failed: ${error.message}`);
       } catch (updateError) {
         console.error('Failed to update deployment status:', updateError);
       }

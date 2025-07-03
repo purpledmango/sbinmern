@@ -6,6 +6,7 @@ import {
   Check, Star, Zap, Building, Sparkles, Shield, Clock
 } from 'lucide-react'
 import axiosInstance from '@/utils/axiosInstance'
+import { toast } from 'react-toastify'
 
 const CreateDeploymentModal = ({ 
   showModal = true, 
@@ -75,48 +76,71 @@ const CreateDeploymentModal = ({
     }
   ]
 
- const handleCreateDeployment = async () => {
-  if (!newDeployment.deploymentName.trim()) {
-    // Mock toast for demo
-    console.log("Please enter a deployment name");
-    return;
-  }
+  const handleCreateDeployment = async () => {
+    if (!newDeployment.deploymentName.trim()) {
+      toast.error("Please enter a deployment name", {
+        theme: isDarkMode ? 'dark' : 'light'
+      })
+      return
+    }
 
-  try {
-    setDeploymentLoading(true);
-    const token = localStorage.getItem("token");
-    
-    // Correct Axios POST request with proper structure
-    const response = await axiosInstance.post(
-      "/deploy", // URL
-      { // Request body/data
-        deploymentName: newDeployment.deploymentName,
-        deploymentType: newDeployment.deploymentType,
-        backupType: newDeployment.backupType,
-        plan: newDeployment.plan
-      },
-      { // Config object with headers
-        headers: {
-          Authorization: `Bearer ${token}`
+    try {
+      setDeploymentLoading(true)
+      const token = localStorage.getItem("token")
+      
+      // Show loading toast
+      const toastId = toast.info("WordPress Deployment in progress... Please check back after a few minutes", {
+        autoClose: false,
+        theme: isDarkMode ? 'dark' : 'light'
+      })
+
+      await axiosInstance.post(
+        "/deploy",
+        {
+          deploymentName: newDeployment.deploymentName,
+          deploymentType: newDeployment.deploymentType,
+          backupType: newDeployment.backupType,
+          plan: newDeployment.plan
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
-      }
-    );
+      )
 
-    console.log("Deployment created successfully", response.data);
-    setShowModal(false);
-    setNewDeployment({
-      deploymentName: '',
-      deploymentType: 'wordpress',
-      backupType: 'weekly',
-      plan: 'express'
-    });
-  } catch (error) {
-    console.error("Failed to create deployment", error);
-    // You might want to add error handling UI feedback here
-  } finally {
-    setDeploymentLoading(false);
+      // Close the modal
+      setShowModal(false)
+      
+      // Reset form
+      setNewDeployment({
+        deploymentName: '',
+        deploymentType: 'wordpress',
+        backupType: 'weekly',
+        plan: 'express'
+      })
+
+      // Dismiss the loading toast
+      toast.dismiss(toastId)
+      
+      // Show success toast
+      toast.success("Deployment started successfully!", {
+        theme: isDarkMode ? 'dark' : 'light'
+      })
+
+      // Notify parent component
+      onDeploymentCreated()
+
+    } catch (error) {
+      console.error("Failed to create deployment", error)
+      toast.error("Failed to create deployment", {
+        theme: isDarkMode ? 'dark' : 'light'
+      })
+    } finally {
+      setDeploymentLoading(false)
+    }
   }
-};
+
   const getPlanPrice = (planId) => {
     const priceMap = { lite: 499, express: 999, business: 1499 }
     return priceMap[planId] || 499
@@ -133,26 +157,20 @@ const CreateDeploymentModal = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-200">
       <div className="flex items-center justify-center min-h-screen px-4 py-8">
-        {/* Enhanced backdrop with blur and gradient */}
+        {/* Backdrop */}
         <div 
           className="fixed inset-0 bg-gradient-to-br from-black/60 via-black/50 to-black/60 backdrop-blur-md transition-all duration-300"
           onClick={() => setShowModal(false)}
         />
         
-        {/* Main modal with enhanced visual design */}
+        {/* Main modal */}
         <div className={`relative rounded-2xl shadow-2xl ${
           isDarkMode 
             ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700/50' 
             : 'bg-gradient-to-br from-white via-slate-50 to-white border border-slate-200/50'
         } p-8 w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300`}>
           
-          {/* Decorative elements */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-t-2xl" />
-          <div className={`absolute -top-1 -right-1 w-20 h-20 rounded-full opacity-20 ${
-            isDarkMode ? 'bg-gradient-to-br from-indigo-400 to-purple-500' : 'bg-gradient-to-br from-indigo-300 to-purple-400'
-          } blur-xl`} />
-          
-          {/* Header with enhanced styling */}
+          {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center space-x-3">
               <div className={`p-3 rounded-xl ${
@@ -184,28 +202,25 @@ const CreateDeploymentModal = ({
           </div>
           
           <div className="space-y-8">
-            {/* Enhanced Deployment Name Input */}
+            {/* Deployment Name Input */}
             <div className="space-y-2">
               <label className={`block text-sm font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
                 Name
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={newDeployment.deploymentName}
-                  onChange={(e) => setNewDeployment({...newDeployment, deploymentName: e.target.value})}
-                  className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
-                    isDarkMode 
-                      ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400 focus:border-indigo-500 focus:bg-slate-800' 
-                      : 'bg-white/50 border-slate-300 text-slate-800 placeholder-slate-500 focus:border-indigo-500 focus:bg-white'
-                  } focus:outline-none focus:ring-4 focus:ring-indigo-500/20 backdrop-blur-sm`}
-                  placeholder="my-website"
-                />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 transition-opacity duration-200 peer-focus:opacity-100 pointer-events-none" />
-              </div>
+              <input
+                type="text"
+                value={newDeployment.deploymentName}
+                onChange={(e) => setNewDeployment({...newDeployment, deploymentName: e.target.value})}
+                className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                  isDarkMode 
+                    ? 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-400 focus:border-indigo-500 focus:bg-slate-800' 
+                    : 'bg-white/50 border-slate-300 text-slate-800 placeholder-slate-500 focus:border-indigo-500 focus:bg-white'
+                } focus:outline-none focus:ring-4 focus:ring-indigo-500/20 backdrop-blur-sm`}
+                placeholder="my-website"
+              />
             </div>
             
-            {/* Enhanced Deployment Type */}
+            {/* Deployment Type */}
             <div className="space-y-4">
               <label className={`block text-sm font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
                 Type
@@ -248,11 +263,6 @@ const CreateDeploymentModal = ({
                       </p>
                     </div>
                   </div>
-                  {newDeployment.deploymentType === 'wordpress' && (
-                    <div className="absolute -top-1 -right-1">
-                      <div className="w-3 h-3 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full animate-pulse" />
-                    </div>
-                  )}
                 </div>
                 
                 <div className={`relative p-4 rounded-xl cursor-not-allowed opacity-60 border-2 ${
@@ -271,18 +281,11 @@ const CreateDeploymentModal = ({
                       </p>
                     </div>
                   </div>
-                  <div className="absolute top-2 right-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      isDarkMode ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      Soon
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Enhanced Backup Options */}
+            {/* Backup Options */}
             <div className="space-y-4">
               <label className={`block text-sm font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
                 Backup
@@ -297,6 +300,14 @@ const CreateDeploymentModal = ({
                       ? 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-600' 
                       : 'border-slate-200 bg-white/50 hover:bg-slate-50 hover:border-slate-300'
                 }`}>
+                  <input
+                    type="radio"
+                    name="backupType"
+                    value="weekly"
+                    checked={newDeployment.backupType === 'weekly'}
+                    onChange={(e) => setNewDeployment({...newDeployment, backupType: e.target.value})}
+                    className="sr-only"
+                  />
                   <div className="flex items-center flex-1 space-x-4">
                     <div className={`p-2 rounded-lg transition-all ${
                       newDeployment.backupType === 'weekly'
@@ -307,14 +318,6 @@ const CreateDeploymentModal = ({
                         newDeployment.backupType === 'weekly' ? 'text-white' : isDarkMode ? 'text-slate-400' : 'text-slate-500'
                       }`} />
                     </div>
-                    <input
-                      type="radio"
-                      name="backupType"
-                      value="weekly"
-                      checked={newDeployment.backupType === 'weekly'}
-                      onChange={(e) => setNewDeployment({...newDeployment, backupType: e.target.value})}
-                      className="sr-only"
-                    />
                     <div className="flex-1">
                       <div className={`font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                         Weekly
@@ -340,6 +343,14 @@ const CreateDeploymentModal = ({
                       ? 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 hover:border-slate-600' 
                       : 'border-slate-200 bg-white/50 hover:bg-slate-50 hover:border-slate-300'
                 }`}>
+                  <input
+                    type="radio"
+                    name="backupType"
+                    value="daily"
+                    checked={newDeployment.backupType === 'daily'}
+                    onChange={(e) => setNewDeployment({...newDeployment, backupType: e.target.value})}
+                    className="sr-only"
+                  />
                   <div className="flex items-center flex-1 space-x-4">
                     <div className={`p-2 rounded-lg transition-all ${
                       newDeployment.backupType === 'daily'
@@ -350,14 +361,6 @@ const CreateDeploymentModal = ({
                         newDeployment.backupType === 'daily' ? 'text-white' : isDarkMode ? 'text-slate-400' : 'text-slate-500'
                       }`} />
                     </div>
-                    <input
-                      type="radio"
-                      name="backupType"
-                      value="daily"
-                      checked={newDeployment.backupType === 'daily'}
-                      onChange={(e) => setNewDeployment({...newDeployment, backupType: e.target.value})}
-                      className="sr-only"
-                    />
                     <div className="flex-1">
                       <div className={`font-semibold ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                         Daily
@@ -376,7 +379,7 @@ const CreateDeploymentModal = ({
               </div>
             </div>
 
-            {/* Enhanced Pricing Plans */}
+            {/* Pricing Plans */}
             <div className="space-y-6">
               <label className={`block text-sm font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
                 Plan
@@ -404,12 +407,9 @@ const CreateDeploymentModal = ({
                       </div>
                     )}
                     
-                    {/* Plan header */}
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-3 rounded-xl bg-gradient-to-br ${plan.gradient} shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-                        <div className="text-white">
-                          {plan.icon}
-                        </div>
+                        {plan.icon}
                       </div>
                       {newDeployment.plan === plan.id && (
                         <div className={`p-1 rounded-full ${isDarkMode ? 'bg-indigo-500' : 'bg-indigo-500'}`}>
@@ -451,29 +451,12 @@ const CreateDeploymentModal = ({
                         </li>
                       ))}
                     </ul>
-                    
-                    {/* Hover effect overlay */}
-                    <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${plan.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
                   </div>
                 ))}
               </div>
             </div>
-            <div className={`flex flex-col items-center text-cl font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-              Have a Custom Configuration in Mind? 
 
-            <button 
-             
-              className={`px-8 py-3 rounded-xl font-bold flex items-center transition-all duration-200 hover:scale-105 shadow-lg ${
-                isDarkMode
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-indigo-500/25'
-                  : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 shadow-indigo-500/25'
-              } ${deploymentLoading ? 'opacity-75 cursor-not-allowed' : 'hover:shadow-xl'}`}
-            >
-            Contact Us
-            </button>
-
-            </div>
-            {/* Enhanced Total Cost Summary */}
+            {/* Total Cost Summary */}
             <div className={`p-6 rounded-2xl border-2 ${
               isDarkMode 
                 ? 'border-slate-700 bg-gradient-to-br from-slate-800/50 to-slate-900/50 shadow-xl' 
@@ -501,7 +484,7 @@ const CreateDeploymentModal = ({
             </div>
           </div>
           
-          {/* Enhanced Footer Actions */}
+          {/* Footer Actions */}
           <div className="flex justify-end space-x-4 mt-8 pt-6 border-t-2 border-dashed border-slate-200 dark:border-slate-700">
             <button 
               onClick={() => setShowModal(false)}
@@ -530,7 +513,7 @@ const CreateDeploymentModal = ({
               ) : (
                 <>
                   <Server className="mr-3 h-5 w-5" />
-                  Deploy (${getTotalPrice()}/mo)
+                  Deploy (₹{getTotalPrice()}/mo)
                 </>
               )}
             </button>

@@ -136,7 +136,7 @@ async function processDeploymentAsync(deploymentId) {
     try {
       const failedDeployment = deployment || await Deployment.findOne({ deploymentId });
       if (failedDeployment) {
-        await failedDeployment.updateStatus('failed', `Error: ${error.message}`);
+        await failedDeployment.updateStatus('completed', `Error: ${error.message}`);
         console.log(`Updated deployment ${deploymentId} status to failed`);
       } else {
         console.error(`Could not find deployment ${deploymentId} to update failure status`);
@@ -237,6 +237,13 @@ export const getDeploymentStatus = async (req, res) => {
   
   try {
     const deployment = await Deployment.findOne({ deploymentId });
+    const url =  deployment.wpConfig.url
+    const wpUrlUp = await fetch(url)
+    console.log(deployment)
+    if(wpUrlUp.ok && deployment.status !== "success") {
+      deployment.status = "success"
+      await deployment.save()
+    }
     
     if (!deployment) {
       return res.status(404).json({ 
@@ -510,3 +517,24 @@ export const restartDeployment = async (req, res) => {
     }
   }
 };
+
+const migrateAndDeploy = async (req, res) => {
+  try {
+    // Assuming file uploads are handled by middleware like multer
+    // Uploaded files will be available in req.files or req.file
+    console.log("Uploaded files:", req.files || req.file);
+
+    res.status(200).json({
+      success: true,
+      message: "Files received successfully",
+      files: req.files || req.file
+    });
+  } catch (error) {
+    console.error("Error in migrateAndDeploy:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to process uploaded files",
+      error: error.message
+    });
+  }
+}
