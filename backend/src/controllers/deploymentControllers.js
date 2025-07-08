@@ -425,7 +425,7 @@ export const getDeploymentByUser = async (req, res) => {
     }
 
     // Add await to actually execute the query
-    const allDeployments = await Deployment.find({ uid }).lean(); // .lean() for plain JS objects
+    const allDeployments = (await Deployment.find({ uid }).lean()).reverse(); // .lean() for plain JS objects
 
     // Check if deployments exist (empty array is still truthy)
     if (!allDeployments || allDeployments.length === 0) {

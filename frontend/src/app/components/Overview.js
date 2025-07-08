@@ -26,7 +26,7 @@ import DeploymentCard from './DeploymenCard'
 
     useEffect(() => {
       fetchDeployments();
-    }, []);
+    }, [deployments]);
     
     const fetchDeployments = async () => {
       try {
@@ -152,32 +152,52 @@ import DeploymentCard from './DeploymenCard'
     return (
       <div>
         {/* Deployment Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard 
-            value={deploymentStats.totalDeployments} 
-            label="Total Deployments" 
-            icon={Server} 
-            color="indigo" 
-          />
-          <StatCard 
-            value={deploymentStats.liveWebsites} 
-            label="Live Websites" 
-            icon={Globe} 
-            color="emerald" 
-          />
-          <StatCard 
-            value={deploymentStats.pendingInvoices} 
-            label="Pending Invoices" 
-            icon={FileText} 
-            color="amber" 
-          />
-          <StatCard 
-            value={deploymentStats.maintenanceMode} 
-            label="In Maintenance" 
-            icon={Wrench} 
-            color="rose" 
-          />
+           {deployments.length > 0 && (
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 p-5 rounded-xl border ${
+          isDarkMode ? 'bg-slate-800/30 border-slate-700' : 'bg-white border-slate-200 shadow-sm'
+        }`}>
+          <div className={`p-3 rounded-lg text-center ${
+            isDarkMode ? 'bg-slate-700/50' : 'bg-slate-50'
+          }`}>
+            <div className={`text-3xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              {deployments.length}
+            </div>
+            <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              Total Deployments
+            </div>
+          </div>
+          <div className={`p-3 rounded-lg text-center ${
+            isDarkMode ? 'bg-green-900/20' : 'bg-green-50'
+          }`}>
+            <div className="text-3xl font-bold text-green-500 mb-1">
+              {deployments.filter(d => d.status === 'completed').length}
+            </div>
+            <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
+              Active
+            </div>
+          </div>
+          <div className={`p-3 rounded-lg text-center ${
+            isDarkMode ? 'bg-amber-900/20' : 'bg-amber-50'
+          }`}>
+            <div className="text-3xl font-bold text-amber-500 mb-1">
+              {deployments.filter(d => ['in-progress', 'initiated'].includes(d.status)).length}
+            </div>
+            <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>
+              In Progress
+            </div>
+          </div>
+          <div className={`p-3 rounded-lg text-center ${
+            isDarkMode ? 'bg-red-900/20' : 'bg-red-50'
+          }`}>
+            <div className="text-3xl font-bold text-red-500 mb-1">
+              {deployments.filter(d => d.status === 'failed').length}
+            </div>
+            <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+              Failed
+            </div>
+          </div>
         </div>
+      )}
 
         {/* Active Deployments */}
         <div className={`rounded-xl p-6 ${
@@ -202,8 +222,8 @@ import DeploymentCard from './DeploymenCard'
           </div>
           
           <div className="flex flex-col gap-6">
-            {deployments.slice(0, 3).map((deployment, index) => (
-              <DeploymentCard key={index} deployment={deployment} isDarkMode={isDarkMode} />
+            {deployments.reverse().slice(0, 3).map((deployment, index) => (
+              <DeploymentCard key={index} deployment={deployment} isDarkMode={isDarkMode} onDelete />
             ))}
           </div>
         </div>

@@ -3,22 +3,30 @@ import { deployPlan, fetchDeploymentDetails, deleteDeployment, getDeploymentStat
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import { migrateFiles } from "../utils/migration.js";
 
+
+import { fileURLToPath } from 'url';
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(__dirname, "../../migrations");
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    const uploadDir = path.join(__dirname, '../migrations');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
-    cb(null, dir);
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
   }
 });
 
-const upload = multer({ storage });
+export const upload = multer({ storage });
+
 
 const router = Router();
 
@@ -31,5 +39,11 @@ router.post("/restart/:deploymentId", restartDeployment)
 router.delete("/:deploymentId", deleteDeployment)
 router.get("/status/:deploymentId", getDeploymentStatus)
 router.get("/user/:uid", getDeploymentByUser)
-router.post("/migrate-wp", upload.array("wp_archives", "sql_dump"));
+router.post(
+  "/migrate-wp",
+  upload.fields([
+    { name: "sql_dump", maxCount: 1 },
+    { name: "wp_archives", maxCount: 1 }
+  ]), migrateFiles
+);
 export default router;

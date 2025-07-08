@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
-  Globe, Server, Plus, ShoppingCart, Box, Zap, AlertTriangle, CheckCircle
+  Globe, Server, Plus, ShoppingCart, Box, Zap, AlertTriangle
 } from 'lucide-react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -16,52 +16,79 @@ const Instances = ({ isDarkMode = false }) => {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
+  const [error, setError] = useState(null)
+
+  const authData = useMemo(() => {
+    const token = localStorage.getItem("token")
+    const uid = localStorage.getItem("uid")
+    return { token, uid }
+  }, [])
 
   const fetchDeployments = useCallback(async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
-      const uid = localStorage.getItem("uid")
+      setError(null)
+
+      if (!authData.token || !authData.uid) {
+        throw new Error('Authentication required')
+      }
+
       const response = await axiosInstance.get(
-        `/deploy/user/${uid}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `/deploy/user/${authData.uid}`,
+        { headers: { Authorization: `Bearer ${authData.token}` } }
       )
-      setDeployments(response.data.data)
+
+      setDeployments(response.data.data || [])
     } catch (error) {
       console.error('Failed to fetch deployments:', error)
-      toast.error('Failed to fetch deployments')
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch deployments'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [authData.token, authData.uid])
 
   useEffect(() => {
     fetchDeployments()
-  }, [])
+  }, [fetchDeployments])
 
-  const handleDeploymentCreated = async () => {
-    await fetchDeployments()
-  }
+  // const handleDeploymentCreated = useCallback((newDeployment) => {
+  //   if (newDeployment) {
+  //     setDeployments(prev => [...prev, newDeployment])
+  //   }
+  // }, [])
+  const handleDeploymentCreated = useCallback((newDeployment) => {
+  setShowModal(false);
+  fetchDeployments(); // Always refetch to get the latest state from backend
+}, [fetchDeployments]);
 
-  const handleDeleteDeployment = async (deploymentId) => {
+  const handleDeleteDeployment = useCallback(async (deploymentId) => {
     try {
       setDeletingId(deploymentId)
-      const token = localStorage.getItem("token")
+
+      if (!authData.token) {
+        throw new Error('Authentication required')
+      }
+
       await axiosInstance.delete(
         `/deploy/${deploymentId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${authData.token}` } }
       )
-      toast.success('Deployment deleted successfully')
+
       setDeployments(prev => prev.filter(d => d.id !== deploymentId))
+      toast.success('Deployment deleted successfully')
+
     } catch (error) {
       console.error('Failed to delete deployment:', error)
-      toast.error('Failed to delete deployment')
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete deployment'
+      toast.error(errorMessage)
     } finally {
       setDeletingId(null)
     }
-  }
+  }, [authData.token])
 
-  const getStatusColor = (status) => {
+  const getStatusColor = useCallback((status) => {
     const colors = {
       'completed': 'bg-green-500',
       'failed': 'bg-red-500',
@@ -70,9 +97,9 @@ const Instances = ({ isDarkMode = false }) => {
       'rolled-back': 'bg-red-500'
     }
     return colors[status] || 'bg-gray-500'
-  }
+  }, [])
 
-  const getStatusText = (status) => {
+  const getStatusText = useCallback((status) => {
     const textColors = {
       'completed': isDarkMode ? 'text-green-300' : 'text-green-700',
       'failed': isDarkMode ? 'text-red-300' : 'text-red-700',
@@ -81,17 +108,27 @@ const Instances = ({ isDarkMode = false }) => {
       'rolled-back': isDarkMode ? 'text-red-300' : 'text-red-700'
     }
     return textColors[status] || 'text-gray-500'
-  }
+  }, [isDarkMode])
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     })
-  }
+  }, [])
 
+  const deploymentStats = useMemo(() => {
+    const total = deployments.length
+    const completed = deployments.filter(d => d.status === 'completed').length
+    const inProgress = deployments.filter(d => ['in-progress', 'initiated'].includes(d.status)).length
+    const failed = deployments.filter(d => d.status === 'failed').length
 
+    return { total, completed, inProgress, failed }
+  }, [deployments])
+
+  const handleOpenModal = useCallback(() => setShowModal(true), [])
+  const handleCloseModal = useCallback(() => setShowModal(false), [])
 
   if (loading) {
     return (
@@ -101,6 +138,7 @@ const Instances = ({ isDarkMode = false }) => {
     )
   }
 
+
   return (
     <div className="relative">
       <ToastContainer
@@ -109,7 +147,6 @@ const Instances = ({ isDarkMode = false }) => {
         theme={isDarkMode ? 'dark' : 'light'}
       />
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -120,7 +157,7 @@ const Instances = ({ isDarkMode = false }) => {
           </p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={handleOpenModal}
           className={`flex items-center px-4 py-2.5 rounded-lg gap-2 transition-all
             ${isDarkMode
               ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-900/50'
@@ -132,7 +169,6 @@ const Instances = ({ isDarkMode = false }) => {
         </button>
       </div>
 
-      {/* Stats */}
       {deployments.length > 0 && (
         <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 p-5 rounded-xl border ${
           isDarkMode ? 'bg-slate-800/30 border-slate-700' : 'bg-white border-slate-200 shadow-sm'
@@ -141,7 +177,7 @@ const Instances = ({ isDarkMode = false }) => {
             isDarkMode ? 'bg-slate-700/50' : 'bg-slate-50'
           }`}>
             <div className={`text-3xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              {deployments.length}
+              {deploymentStats.total}
             </div>
             <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               Total Deployments
@@ -151,7 +187,7 @@ const Instances = ({ isDarkMode = false }) => {
             isDarkMode ? 'bg-green-900/20' : 'bg-green-50'
           }`}>
             <div className="text-3xl font-bold text-green-500 mb-1">
-              {deployments.filter(d => d.status === 'completed').length}
+              {deploymentStats.completed}
             </div>
             <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
               Active
@@ -161,7 +197,7 @@ const Instances = ({ isDarkMode = false }) => {
             isDarkMode ? 'bg-amber-900/20' : 'bg-amber-50'
           }`}>
             <div className="text-3xl font-bold text-amber-500 mb-1">
-              {deployments.filter(d => ['in-progress', 'initiated'].includes(d.status)).length}
+              {deploymentStats.inProgress}
             </div>
             <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>
               In Progress
@@ -171,7 +207,7 @@ const Instances = ({ isDarkMode = false }) => {
             isDarkMode ? 'bg-red-900/20' : 'bg-red-50'
           }`}>
             <div className="text-3xl font-bold text-red-500 mb-1">
-              {deployments.filter(d => d.status === 'failed').length}
+              {deploymentStats.failed}
             </div>
             <div className={`text-xs font-medium uppercase tracking-wider ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
               Failed
@@ -180,11 +216,10 @@ const Instances = ({ isDarkMode = false }) => {
         </div>
       )}
 
-      {/* Content */}
-      {deployments.length === 0 ? (
+      {(deployments.length === 0) ? (
         <div className={`text-center py-16 rounded-xl border-2 border-dashed transition-all ${
-          isDarkMode ? 'border-slate-700 bg-slate-800/30 hover:border-slate-600' 
-          : 'border-slate-300 bg-slate-50/50 hover:border-slate-400'
+          isDarkMode ? 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
+            : 'border-slate-300 bg-slate-50/50 hover:border-slate-400'
         }`}>
           <div className={`inline-flex items-center justify-center h-16 w-16 rounded-full mb-4 mx-auto ${
             isDarkMode ? 'bg-slate-700/50 text-slate-500' : 'bg-slate-100 text-slate-400'
@@ -198,7 +233,7 @@ const Instances = ({ isDarkMode = false }) => {
             Get started by creating your first deployment
           </p>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={handleOpenModal}
             className={`flex items-center px-6 py-3 rounded-lg gap-2 mx-auto transition-all
               ${isDarkMode
                 ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-900/50'
@@ -227,8 +262,9 @@ const Instances = ({ isDarkMode = false }) => {
       )}
 
       <CreateDeploymentModal
+
         showModal={showModal}
-        setShowModal={setShowModal}
+        setShowModal={handleCloseModal}
         isDarkMode={isDarkMode}
         onDeploymentCreated={handleDeploymentCreated}
       />
