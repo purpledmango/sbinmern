@@ -15,7 +15,7 @@ import Migrate from '../components/Migrate'
 const Dashboard = () => {
 
   const router = useRouter()
-  const [tab, setTab] = useState(localStorage.getItem("currentPage") || "overview"  )
+  const [tab, setTab] = useState(localStorage.getItem("currentPage") || "overview");
   const [notifications, setNotifications] = useState(3)
   const [userData, setUserData] = useState({ name: '' })
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
