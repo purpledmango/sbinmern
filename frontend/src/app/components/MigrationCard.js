@@ -449,6 +449,8 @@ const MigrationCard = ({
           )}
         </div>
       </div>
+
+      <button className='p-4 bg-blue-400 rounded-xl'>Initiate Migration</button> 
     </div>
   );
 };

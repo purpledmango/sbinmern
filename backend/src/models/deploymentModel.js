@@ -28,7 +28,9 @@ const deploymentSchema = new Schema({
     type: Date, 
     default: Date.now 
   },
-  // Status Information
+  mid: {
+    type:String
+  },
   status: {
     type: String,
     enum: ['initiated', 'in-progress', 'completed', 'success', 'failed', 'rolled-back'],

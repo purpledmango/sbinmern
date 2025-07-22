@@ -91,7 +91,7 @@ export const deployPlan = async(req, res) => {
 };
 
 // Async background processing function
-async function processDeploymentAsync(deploymentId) {
+export async  function processDeploymentAsync(deploymentId) {
     console.log("Intiating the Docker Deployment")
   let deployment = null;
   let deployedInstance = null;
@@ -105,6 +105,16 @@ async function processDeploymentAsync(deploymentId) {
       throw new Error(`Deployment ${deploymentId} not found`);
     }
     
+    // if( deployment.status === 'initiated' && deployment.mid !== null) {
+    //   const migrationExist = await Migration.findOne({ mid: deployment.mid });
+    //   if (migrationExist) { 
+    //     const wp_archiveLink =  `https://api.hostastra.com/uploads/${migrationExist.wp_archive} `;
+    //     const sql_dumpLink = migrationExist.sql_dump;
+        
+    //   }else{
+    //     await deployWordPress(deploymentId, {plan: "premium"});
+    //   }
+    // }
     // Step 2: Update status to in-progress
     await deployment.updateStatus('in-progress', 'Starting WordPress installation');
     console.log(`Updated status to in-progress for ${deploymentId}`);

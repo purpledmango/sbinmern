@@ -2,6 +2,8 @@ import Migration from '../models/migrationModel.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import Deployment from '../models/deploymentModel.js';
+import { processDeploymentAsync } from '../controllers/deploymentControllers.js';
 
 // Fix for ES modules - must be at the top level
 const __filename = fileURLToPath(import.meta.url);
@@ -281,5 +283,82 @@ export const migrateFiles = async (req, res) => {
       message: 'Internal server error',
       error: process.env.NODE_ENV === 'development' ? error.message : 'An error occurred during file processing'
     });
+  }
+};
+
+export const createMigration = async(req, res) => {
+  try {
+    // Get user ID from authenticated request
+    const { uid } = req.user;
+    const { mid } = req.params;
+    const { deploymentName, deploymentType = 'wordpress' } = req.body;
+    
+
+    // Validate required fields
+    if (!uid || !deploymentName) {
+      console.warn('Validation failed - missing uid or deploymentName');
+      return res.status(400).json({
+        success: false,
+        message: "UID and deploymentName are required",
+        code: "MISSING_REQUIRED_FIELDS"
+      });
+    }
+
+    // Create new deployment record with initial configuration
+    const deployment = new Deployment({
+      uid,
+      deploymentName,
+      deploymentType,
+      status: 'initiated',
+      mid,
+      wpConfig: {
+        url: process.env.WP_DEFAULT_URL || 'http://localhost',
+        port: process.env.WP_DEFAULT_PORT || 64395,
+        databaseName: 'wpdb',
+        databaseUser: 'wpuser',
+        databasePassword: generateSecurePassword(),
+        rootPassword: generateSecurePassword()
+      },
+      logs: [`${new Date().toISOString()} - Deployment initiated by user ${uid}`]
+    });
+
+    await deployment.save();
+    console.log(`Deployment record created: ${deployment.deploymentId}`);
+
+    // Immediate response to client
+    res.status(202).json({
+      success: true,
+      message: "Deployment process started",
+      deployment: {
+        deploymentId: deployment.deploymentId,
+        name: deployment.deploymentName,
+        status: deployment.status,
+        created: deployment.createdAt,
+        monitorEndpoint: `/deployments/${deployment.deploymentId}/status`
+      },
+      uid
+    });
+
+    // Start background deployment process
+    // Use setImmediate instead of setTimeout for better performance
+   setTimeout(() => {
+  processDeploymentAsync(deployment.deploymentId)
+    .catch(err => {
+      console.error(`Background processing error for ${deployment.deploymentId}:`, err);
+    });
+}, 2000);
+
+  } catch (error) {
+    console.error("Deployment endpoint error:", error);
+    
+    // Only send response if we haven't already sent one
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: "Internal server error during deployment initiation",
+        error: error.message,
+        code: "DEPLOYMENT_INIT_FAILURE"
+      });
+    }
   }
 };
