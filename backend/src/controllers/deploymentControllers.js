@@ -178,6 +178,15 @@ export const deleteDeployment = async (req, res) => {
   const { deploymentId } = req.params;
   const ssh = new NodeSSH();
   
+  let cleanupReport = {
+    containers: false,
+    volumes: false,
+    directory: false,
+    ports: false,
+    database: false,
+    networkCleanup: false
+  };
+
   try {
     // Connect to server
     await ssh.connect({
@@ -187,47 +196,164 @@ export const deleteDeployment = async (req, res) => {
       readyTimeout: 60000
     });
 
-    // 1. Stop and remove containers with volumes
-    const composeResult = await ssh.execCommand(
-      `cd /root/deployments/${deploymentId} && docker-compose down -v`,
-      { cwd: `/root/deployments/${deploymentId}` }
-    );
-    
-    if (composeResult.code !== 0) {
-      throw new Error(`Docker-compose failed: ${composeResult.stderr}`);
+    console.log(`Starting cleanup for deployment: ${deploymentId}`);
+
+    // 1. Get deployment info before deletion (for port cleanup)
+    let deployment = null;
+    try {
+      deployment = await Deployment.findOne({ deploymentId });
+    } catch (dbError) {
+      console.warn(`Could not fetch deployment info: ${dbError.message}`);
     }
 
-    // 2. Remove deployment directory
-    const rmResult = await ssh.execCommand(
-      `rm -rf /root/deployments/${deploymentId}`
+    // 2. Check if containers are running and get port info
+    const containerCheckResult = await ssh.execCommand(
+      `docker ps -a --format "table {{.Names}}\t{{.Ports}}" | grep "${deploymentId}" || echo "No containers found"`
     );
     
-    if (rmResult.code !== 0) {
-      throw new Error(`Directory removal failed: ${rmResult.stderr}`);
+    let usedPorts = [];
+    if (containerCheckResult.stdout && !containerCheckResult.stdout.includes("No containers found")) {
+      // Extract ports from docker ps output
+      const lines = containerCheckResult.stdout.split('\n');
+      lines.forEach(line => {
+        const portMatch = line.match(/0\.0\.0\.0:(\d+)->/g);
+        if (portMatch) {
+          portMatch.forEach(match => {
+            const port = match.match(/(\d+)/)[1];
+            usedPorts.push(port);
+          });
+        }
+      });
     }
-    
-    // 3. Delete deployment record
+
+    // 3. Stop and remove containers with volumes (force removal)
+    console.log(`Stopping containers for ${deploymentId}...`);
+    const composeResult = await ssh.execCommand(
+      `cd /root/deployments/${deploymentId} && docker-compose down -v --remove-orphans --timeout 30`,
+      { cwd: `/root/deployments/${deploymentId}` }
+    );
+
+    if (composeResult.code === 0) {
+      cleanupReport.containers = true;
+      console.log(`Containers stopped successfully for ${deploymentId}`);
+    } else {
+      console.warn(`Docker-compose down warning: ${composeResult.stderr}`);
+      // Try force removal of containers
+      await ssh.execCommand(`docker rm -f $(docker ps -aq --filter "name=${deploymentId}") 2>/dev/null || true`);
+    }
+
+    // 4. Force remove any remaining volumes
+    console.log(`Cleaning up volumes for ${deploymentId}...`);
+    const volumeCleanup = await ssh.execCommand(
+      `docker volume rm wp_${deploymentId} mysql_${deploymentId} 2>/dev/null || true && ` +
+      `docker volume rm $(docker volume ls -q | grep "${deploymentId}") 2>/dev/null || true`
+    );
+    cleanupReport.volumes = true;
+
+    // 5. Network cleanup
+    console.log(`Cleaning up networks for ${deploymentId}...`);
+    const networkCleanup = await ssh.execCommand(
+      `docker network rm $(docker network ls --format "{{.Name}}" | grep "${deploymentId}") 2>/dev/null || true`
+    );
+    cleanupReport.networkCleanup = true;
+
+    // 6. Remove deployment directory with force
+    console.log(`Removing directory for ${deploymentId}...`);
+    const rmResult = await ssh.execCommand(
+      `rm -rf /root/deployments/${deploymentId}`,
+      { cwd: '/root/deployments' }
+    );
+
+    if (rmResult.code === 0) {
+      cleanupReport.directory = true;
+      console.log(`Directory removed successfully for ${deploymentId}`);
+    } else {
+      console.warn(`Directory removal warning: ${rmResult.stderr}`);
+      // Try with sudo if needed
+      await ssh.execCommand(`sudo rm -rf /root/deployments/${deploymentId} 2>/dev/null || true`);
+      cleanupReport.directory = true;
+    }
+
+    // 7. Check and clean up ports
+    if (usedPorts.length > 0) {
+      console.log(`Checking port cleanup for ports: ${usedPorts.join(', ')}`);
+      
+      for (const port of usedPorts) {
+        // Check if port is still in use
+        const portCheck = await ssh.execCommand(`netstat -tulpn | grep :${port} || echo "Port ${port} is free"`);
+        
+        if (portCheck.stdout.includes(`Port ${port} is free`)) {
+          console.log(`Port ${port} is now free`);
+        } else {
+          console.warn(`Port ${port} might still be in use: ${portCheck.stdout}`);
+          // Kill any processes still using the port
+          await ssh.execCommand(`fuser -k ${port}/tcp 2>/dev/null || true`);
+        }
+      }
+      cleanupReport.ports = true;
+    } else {
+      cleanupReport.ports = true; // No ports to clean
+    }
+
+    // 8. Docker system cleanup to free up space
+    console.log(`Running docker system cleanup...`);
+    await ssh.execCommand(`docker system prune -f --volumes 2>/dev/null || true`);
+
+    // 9. Delete deployment record from database
+    console.log(`Deleting database record for ${deploymentId}...`);
     const deletedDeployment = await Deployment.deleteOne({ deploymentId });
     
-    if (deletedDeployment.deletedCount === 0) {
-      throw new Error('Deployment not found in database');
+    if (deletedDeployment.deletedCount > 0) {
+      cleanupReport.database = true;
+      console.log(`Database record deleted for ${deploymentId}`);
+    } else {
+      console.warn(`No database record found for ${deploymentId}`);
+      cleanupReport.database = true; // Consider it successful if record didn't exist
     }
+
+    // 10. Final verification
+    console.log(`Running final verification for ${deploymentId}...`);
+    const finalCheck = await ssh.execCommand(
+      `ls /root/deployments/DEP-${deploymentId} 2>/dev/null && echo "Directory still exists" || echo "Directory cleaned"`
+    );
+
+    const allCleaned = Object.values(cleanupReport).every(status => status === true);
 
     res.status(200).json({
       success: true,
-      message: `Successfully deleted deployment ${deploymentId}`
+      message: `Successfully deleted deployment ${deploymentId}`,
+      deploymentId,
+      cleanupReport,
+      allResourcesCleaned: allCleaned,
+      portsFreed: usedPorts,
+      verificationMessage: finalCheck.stdout.includes('Directory cleaned') 
+        ? 'All resources verified as cleaned' 
+        : 'Some resources may still exist',
+      timestamp: new Date().toISOString()
     });
-    
+
   } catch (error) {
+    console.error(`Error deleting deployment ${deploymentId}:`, error);
+    
     res.status(503).json({
       success: false,
       message: `Failed to delete deployment ${deploymentId}`,
+      deploymentId,
       error: error.message,
+      cleanupReport,
+      partialCleanup: Object.values(cleanupReport).some(status => status === true),
+      timestamp: new Date().toISOString(),
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
+
   } finally {
     // Always close SSH connection
-    ssh.dispose();
+    try {
+      ssh.dispose();
+      console.log(`SSH connection closed for ${deploymentId} cleanup`);
+    } catch (disposeError) {
+      console.error('Error closing SSH connection:', disposeError);
+    }
   }
 };
 

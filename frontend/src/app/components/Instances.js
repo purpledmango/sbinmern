@@ -12,6 +12,7 @@ import DeploymentCard from './DeploymenCard'
 import CreateDeploymentModal from './CreateDeploymentModal'
 
 const Instances = ({ isDarkMode = false }) => {
+  localStorage
   const [deployments, setDeployments] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -76,8 +77,8 @@ const Instances = ({ isDarkMode = false }) => {
         { headers: { Authorization: `Bearer ${authData.token}` } }
       )
 
-      setDeployments(prev => prev.filter(d => d.id !== deploymentId))
       toast.success('Deployment deleted successfully')
+      fetchDeployments();
 
     } catch (error) {
       console.error('Failed to delete deployment:', error)
@@ -248,7 +249,7 @@ const Instances = ({ isDarkMode = false }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {deployments.map((deployment) => (
             <DeploymentCard
-              key={deployment.id}
+              key={deployment.deploymentId}
               deployment={deployment}
               isDarkMode={isDarkMode}
               getStatusColor={getStatusColor}

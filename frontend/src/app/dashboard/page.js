@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { Rocket, Home, Images, Cog, PieChart, Users, Settings, Bell, ChevronDown, Menu, X, CpuIcon, Camera } from 'lucide-react'
+import { Rocket, Home, Images, Cog, PieChart, Users, Settings, Bell, ChevronDown, Menu, X, CpuIcon, Camera, Rotate3D } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Overview from '../components/Overview'
 import { useRouter } from 'next/navigation'
@@ -10,10 +10,12 @@ import Image from 'next/image'
 import Instances from '../components/Instances'
 import Snapshots from '../components/Snapshots'
 import Backup from '../components/Backup'
+import Migrate from '../components/Migrate'
 
 const Dashboard = () => {
+
   const router = useRouter()
-  const [tab, setTab] = useState('overview')
+  const [tab, setTab] = useState(localStorage.getItem("currentPage") || "overview"  )
   const [notifications, setNotifications] = useState(3)
   const [userData, setUserData] = useState({ name: '' })
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -224,6 +226,12 @@ const Dashboard = () => {
                 onClick={() => handleTabChange('instances')}
               />
               <NavItem 
+                icon={Rotate3D} 
+                label="migrate" 
+                active={tab === 'migrate'} 
+                onClick={() => handleTabChange('migrate')}
+              />
+              <NavItem 
                 icon={Camera} 
                 label="snapshots" 
                 active={tab === 'snapshots'} 
@@ -349,6 +357,8 @@ const Dashboard = () => {
               {tab === 'overview' && <Overview isDarkMode={isDarkMode} />}
               
               {tab === 'instances' && <Instances isDarkMode={isDarkMode} />}
+
+              {tab === 'migrate' && <Migrate isDarkMode={isDarkMode} />}
 
               {tab === 'snapshots' && <Snapshots  isDarkMode={isDarkMode}/>}
 

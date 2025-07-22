@@ -1,13 +1,14 @@
   "use client"
 
-  import React, { useEffect, useState } from 'react'
-  import { Users, Server, FileText, Globe, Wrench, ExternalLink, ArrowUpRight, Shield, BarChart3, Clock, HardDrive } from 'lucide-react'
+  import React, { use, useEffect, useState } from 'react'
+  import { Usdeploymentsers, Server, FileText, Globe, Wrench, ExternalLink, ArrowUpRight, Shield, BarChart3, Clock, HardDrive } from 'lucide-react'
   import axiosInstance from '@/utils/axiosInstance'
   import Spinner from "./Spinner.js"
 import Link from 'next/link'
 import DeploymentCard from './DeploymenCard'
 
   const Overview = ({ isDarkMode = false }) => {
+    localStorage.setItem("currentPage", "overview");
     // Fixed state management with useState hook
     const [deploymentStats, setDeploymentStats] = useState({
       totalDeployments: 0,
@@ -24,9 +25,7 @@ import DeploymentCard from './DeploymenCard'
       
     ]);
 
-    useEffect(() => {
-      fetchDeployments();
-    }, [deployments]);
+    useEffect(() => {   fetchDeployments(); }, []);
     
     const fetchDeployments = async () => {
       try {
