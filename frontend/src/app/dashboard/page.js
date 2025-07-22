@@ -15,8 +15,13 @@ import Migrate from '../components/Migrate'
 const Dashboard = () => {
 
   const router = useRouter()
-  const [tab, setTab] = useState(localStorage.getItem("currentPage") || "overview");
-  const [notifications, setNotifications] = useState(3)
+const [tab, setTab] = useState(() => {
+  // Only access localStorage on the client side during initial render
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem("currentPage") || "overview";
+  }
+  return "overview";
+});  const [notifications, setNotifications] = useState(3)
   const [userData, setUserData] = useState({ name: '' })
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
