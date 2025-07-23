@@ -5,7 +5,7 @@ import { findAvailablePort } from './helperFunctions.js';
 
 // Function to generate a secure random password
 const generateRandomPassword = (length = 20) => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!12321313132';
   let password = '';
   const randomBytes = crypto.randomBytes(length);
   for (let i = 0; i < length; i++) {
