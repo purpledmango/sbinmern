@@ -69,7 +69,7 @@ export const deployPlan = async(req, res) => {
     // Start background deployment process
     // Use setImmediate instead of setTimeout for better performance
    setTimeout(() => {
-  processDeploymentAsync(deployment.deploymentId)
+    processDeploymentAsync(deployment.deploymentId)
     .catch(err => {
       console.error(`Background processing error for ${deployment.deploymentId}:`, err);
     });
@@ -91,7 +91,7 @@ export const deployPlan = async(req, res) => {
 };
 
 // Async background processing function
-export async  function processDeploymentAsync(deploymentId) {
+async function processDeploymentAsync(deploymentId) {
     console.log("Intiating the Docker Deployment")
   let deployment = null;
   let deployedInstance = null;
@@ -373,6 +373,7 @@ export const getDeploymentStatus = async (req, res) => {
   
   try {
     const deployment = await Deployment.findOne({ deploymentId });
+    console.log(deployment)
     const url =  deployment.wpConfig.url
     const wpUrlUp = await fetch(url)
     console.log(deployment)

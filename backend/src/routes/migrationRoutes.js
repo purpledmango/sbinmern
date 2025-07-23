@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
-import { createMigration, migrateFiles } from "../utils/migration.js";
+import { migrateFiles } from "../utils/migration.js";
 import { fileURLToPath } from 'url';
 import authJWTMiddleware from "../utils/authMiddleware.js";
 import Migration from "../models/migrationModel.js";
@@ -94,6 +94,6 @@ router.post("/create", authJWTMiddleware, async (req, res) => {
   }
 });
 
-router.post("/deploy/:mid", authJWTMiddleware, createMigration)
+// router.post("/deploy/:mid", authJWTMiddleware, createMigration)
 
 export default router;

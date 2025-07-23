@@ -6,6 +6,7 @@
   import Spinner from "./Spinner.js"
 import Link from 'next/link'
 import DeploymentCard from './DeploymenCard'
+import toast from 'react-hot-toast'
 
   const Overview = ({ isDarkMode = false }) => {
     localStorage.setItem("currentPage", "overview");
@@ -24,9 +25,34 @@ import DeploymentCard from './DeploymenCard'
     const [deployments, setDeployments] = useState([
       
     ]);
+    const [deletingId, setDeletingId] = useState(null)
 
     useEffect(() => {   fetchDeployments(); }, []);
     
+    const handleDeleteDeployment = (async (deploymentId) => {
+      const token = localStorage.getItem("token")
+        try {
+          setDeletingId(deploymentId)
+    
+         
+    
+          await axiosInstance.delete(
+            `/deploy/${deploymentId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+    
+          toast.success('Deployment deleted successfully')
+          fetchDeployments();
+    
+        } catch (error) {
+          console.error('Failed to delete deployment:', error)
+          const errorMessage = error.response?.data?.message || error.message || 'Failed to delete deployment'
+          toast.error(errorMessage)
+        } finally {
+          setDeletingId(null)
+        }
+      })
+
     const fetchDeployments = async () => {
       try {
         setLoading(true);
@@ -222,7 +248,14 @@ import DeploymentCard from './DeploymenCard'
           
           <div className="flex flex-col gap-6">
             {deployments.reverse().slice(0, 3).map((deployment, index) => (
-              <DeploymentCard key={index} deployment={deployment} isDarkMode={isDarkMode} onDelete />
+              <DeploymentCard
+              key={deployment.deploymentId}
+              deployment={deployment}
+              isDarkMode={isDarkMode}
+             
+              onDelete={handleDeleteDeployment}
+              isDeleting={deletingId === deployment.id}
+            />
             ))}
           </div>
         </div>

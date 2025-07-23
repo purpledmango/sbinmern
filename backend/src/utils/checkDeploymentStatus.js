@@ -10,9 +10,9 @@ const checkCredentialsAndUpdateDeployment =async (deploymentId)=> {
       const nodeMachine = await NodeModel.findOne({nid: "210Sj990"}).select('+credentials.password').exec();
       // Connect to the server
       await ssh.connect({
-      host: nodeMachine.credentials.host,
-      username: nodeMachine.credentials.username || "root",
-      password: nodeMachine.credentials.password,
+      host: "160.187.69.17",
+      username: "root",
+      password: "^^Mdaq09ei210kj@*891)dsada)-st@Gr@@b#er@10&**(!5",
       readyTimeout: 60000
       });
 
